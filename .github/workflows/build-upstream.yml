@@ -1,0 +1,137 @@
+name: Build .mcpb bundles (upstream)
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package name
+        required: true
+        type: string
+      version:
+        description: Exact upstream version to bundle
+        required: true
+        type: string
+      registry:
+        description: pypi or npm
+        required: true
+        default: pypi
+        type: choice
+        options: [pypi, npm]
+
+jobs:
+  build:
+    name: Build (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x86_64
+          - os: macos-13
+            platform: macos-x86_64
+          - os: macos-latest
+            platform: macos-arm64
+          - os: windows-latest
+            platform: windows-x86_64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install mcp2mcpb
+        run: uv pip install --system -e ".[dev]"
+
+      - name: Build .mcpb bundle
+        run: |
+          python -m mcp2mcpb \
+            "${{ inputs.package }}" \
+            --registry "${{ inputs.registry }}" \
+            --pin "${{ inputs.version }}" \
+            --mode complete \
+            --output dist/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcpb-${{ matrix.platform }}
+          path: dist/*.mcpb
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download all platform artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+          merge-multiple: true
+
+      - name: List produced files
+        run: ls -lh dist/*.mcpb
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "${{ inputs.package }}-v${{ inputs.version }}"
+          name: "${{ inputs.package }} ${{ inputs.version }}"
+          files: dist/*.mcpb
+          generate_release_notes: false
+          body: |
+            ## ${{ inputs.package }} ${{ inputs.version }}
+
+            One-click `.mcpb` bundles for Claude Desktop and any MCPB-compatible client.
+
+            ### Installation
+
+            1. Download the `.mcpb` file for your platform below.
+            2. Open Claude Desktop → Settings → Extensions.
+            3. Drag and drop the `.mcpb` file into the Extensions page.
+
+            ### Platform files
+
+            | File | Platform |
+            |------|----------|
+            | `*-linux-x86_64.mcpb` | Linux (x86_64) |
+            | `*-macos-x86_64.mcpb` | macOS (Intel) |
+            | `*-macos-arm64.mcpb` | macOS (Apple Silicon) |
+            | `*-windows-x86_64.mcpb` | Windows (x86_64) |
+
+            ---
+            *Built by [mcp2mcpb](https://github.com/Anselmoo/mcp2mcpb)*
+
+      - name: Update versions.json
+        run: |
+          python - <<'EOF'
+          import json
+          from pathlib import Path
+          f = Path("versions.json")
+          versions = json.loads(f.read_text()) if f.exists() else {}
+          versions["${{ inputs.registry }}/${{ inputs.package }}"] = "${{ inputs.version }}"
+          f.write_text(json.dumps(versions, indent=2, sort_keys=True) + "\n")
+          EOF
+
+      - name: Commit updated versions.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add versions.json
+          git diff --cached --quiet || git commit -m \
+            "chore(versions): ${{ inputs.package }} → ${{ inputs.version }}"
+          git push

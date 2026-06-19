@@ -1,0 +1,146 @@
+[project]
+name = "mcp2mcpb"
+version = "0.2.0"
+description = "Convert PyPI/npm MCP servers into one-click .mcpb bundles for Claude Desktop"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Anselmoo" }]
+requires-python = ">=3.12"
+keywords = ["mcp", "mcpb", "claude", "desktop-extensions", "bundler"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "httpx>=0.27",
+    "pydantic>=2.7",
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5",
+    "respx>=0.21",
+    "ruff>=0.4",
+    "ty>=0.0.26",
+    "poethepoet>=0.27",
+    "repo-release-tools>=1.9.0",
+]
+
+[project.scripts]
+mcp2mcpb = "mcp2mcpb.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/Anselmoo/mcp2mcpb"
+Repository = "https://github.com/Anselmoo/mcp2mcpb"
+Issues = "https://github.com/Anselmoo/mcp2mcpb/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp2mcpb"]
+
+# ── poe tasks (local dev + release ergonomics) ─────────────────────────────────
+[tool.poe.tasks]
+lint = "ruff check src tests"
+format = "ruff format src tests"
+format-check = "ruff format --check src tests"
+type-check = "ty check"
+test = "pytest"
+test-cov = "pytest --cov=src/mcp2mcpb --cov-report=xml --cov-report=term-missing"
+# Local release: build wheel + sdist into dist/ (gitignored), same artifacts CI publishes.
+build = "uv build"
+
+[tool.poe.tasks.unpack]
+help = "Extract a .mcpb bundle to a sibling folder and print its manifest"
+shell = 'd="${bundle%.mcpb}"; rm -rf "$d"; unzip -q -o "$bundle" -d "$d" && echo "→ extracted to $d" && python -m json.tool "$d/manifest.json"'
+args = [{ name = "bundle", positional = true, help = "Path to the .mcpb file" }]
+
+[tool.poe.tasks.check]
+help = "Run the full local gate: lint, format, types, tests"
+sequence = ["lint", "format-check", "type-check", "test"]
+
+[tool.poe.tasks.dist]
+help = "Run the full gate then build distributions into dist/"
+sequence = ["check", "build"]
+
+# ── repo-release-tools (version bump + changelog + release policy) ──────────────
+[tool.rrt]
+pin_target_missing = "warn"
+
+# Version sources kept in lock-step by `rrt` on bump.
+[[tool.rrt.version_targets]]
+path = "pyproject.toml"
+kind = "pep621"
+
+[[tool.rrt.version_targets]]
+path = "src/mcp2mcpb/__init__.py"
+kind = "python_version"
+
+[tool.rrt.eol]
+languages = ["python"]
+warn_days = 180
+error_days = 0
+
+# ── Ruff ──────────────────────────────────────────────────────────────────────
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "UP", "B", "I", "N", "ANN", "S", "ASYNC"]
+ignore = [
+    "S603",     # subprocess with shell=False is fine
+    "S607",     # partial path in subprocess is fine
+]
+
+[tool.ruff.lint.per-file-ignores]
+# assert / missing annotations OK in tests; ASYNC240 (pathlib in async) is noise here
+"tests/**" = ["S101", "ANN", "ASYNC240"]
+
+# ── ty (Astral type checker) ──────────────────────────────────────────────────
+[tool.ty.environment]
+python-version = "3.12"
+extra-paths = ["src"]
+
+[tool.ty.src]
+include = ["src", "tests"]
+
+[tool.ty.terminal]
+output-format = "full"
+
+[tool.ty.rules]
+possibly-unresolved-reference = "error"
+unresolved-import = "error"
+missing-argument = "error"
+invalid-return-type = "error"
+unused-ignore-comment = "warn"
+
+# ── pytest ────────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "--tb=short -q"
+
+# ── coverage ──────────────────────────────────────────────────────────────────
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+exclude_lines = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
