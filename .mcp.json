@@ -1,0 +1,35 @@
+{
+    "mcpServers": {
+        "rrt": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": [
+                "--from",
+                "repo-release-tools[mcp]@latest",
+                "rrt-mcp"
+            ]
+        },
+        "analyzer": {
+            "command": "uvx",
+            "args": [
+                "mcp-server-analyzer@latest"
+            ]
+        },
+        "zen-of-languages": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": [
+                "--from",
+                "mcp-zen-of-languages@latest",
+                "mcp-zen-of-languages-server"
+            ]
+        },
+        "ai-agent-guidelines": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "mcp-ai-agent-guidelines@latest"
+            ]
+        }
+    }
+}

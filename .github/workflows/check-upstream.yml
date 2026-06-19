@@ -1,0 +1,62 @@
+name: Check upstream releases
+
+on:
+  schedule:
+    - cron: "0 6 * * *"     # daily 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package name (e.g. mcp-server-fetch)
+        required: true
+        type: string
+      registry:
+        description: pypi or npm
+        required: true
+        default: pypi
+        type: choice
+        options: [pypi, npm]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write    # needed to trigger workflow_dispatch
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install httpx
+        run: pip install httpx --quiet
+
+      - name: Check for new version
+        id: check
+        env:
+          PACKAGE: ${{ inputs.package || 'mcp-server-fetch' }}
+          REGISTRY: ${{ inputs.registry || 'pypi' }}
+        run: |
+          python scripts/check_version.py \
+            --package "$PACKAGE" \
+            --registry "$REGISTRY" \
+            --versions-file versions.json
+
+      - name: Trigger build if new version found
+        if: steps.check.outputs.new_version != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build-upstream.yml',
+              ref: 'main',
+              inputs: {
+                package:  '${{ steps.check.outputs.package }}',
+                version:  '${{ steps.check.outputs.new_version }}',
+                registry: '${{ steps.check.outputs.registry }}',
+              },
+            })

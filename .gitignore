@@ -1,0 +1,42 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# uv
+.uv/
+
+# Testing / coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# IDEs
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Local Claude Code settings
+.claude/settings.local.json
+
+# mcp2mcpb artifacts
+*.mcpb
+.mcpb-cache/
+docs/

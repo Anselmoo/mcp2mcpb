@@ -1,0 +1,162 @@
+name: Build .mcpb bundle (reusable)
+
+# Reusable workflow for MCP server authors. Add one job to your release
+# pipeline:
+#
+#   jobs:
+#     bundle:
+#       uses: Anselmoo/mcp2mcpb/.github/workflows/build-mcpb.yml@v1
+#       with:
+#         package: my-mcp-server
+#         registry: pypi
+#         mode: complete
+#
+# Self-contained: it installs the published `mcp2mcpb` package from PyPI
+# and runs the CLI directly (it does NOT depend on the composite action tag).
+# Launch recipe (runner/entry-script/extras/subcommand/transport) is optional —
+# omit it and the converter auto-detects from the package (and any in-package
+# [tool.mcpb]/mcpb.toml). On a `release` event the bundle is attached to the
+# release automatically.
+
+on:
+  workflow_call:
+    inputs:
+      package:
+        description: Package name on PyPI or npm.
+        required: true
+        type: string
+      registry:
+        description: "'pypi' or 'npm'."
+        required: false
+        type: string
+        default: pypi
+      version:
+        description: Exact version to bundle. Defaults to the release tag (v-stripped).
+        required: false
+        type: string
+        default: ""
+      mode:
+        description: "'complete' (vendor deps) or 'reference' (uvx/npx)."
+        required: false
+        type: string
+        default: complete
+      python-version:
+        description: Python version used when vendoring dependencies.
+        required: false
+        type: string
+        default: "3.12"
+      output-dir:
+        description: Directory where .mcpb files are written.
+        required: false
+        type: string
+        default: dist
+      mcp2mcpb-version:
+        description: Version spec of the mcp2mcpb package to install from PyPI.
+        required: false
+        type: string
+        default: ">=0.1"
+      runner:
+        description: "Launch runner: uvx | npx | uv-run | python | node (empty = infer)."
+        required: false
+        type: string
+        default: ""
+      entry-script:
+        description: Console script (PyPI) / bin name (npm) to launch (empty = auto-detect).
+        required: false
+        type: string
+        default: ""
+      extras:
+        description: Space-separated package extras (PyPI/uv only), e.g. "mcp".
+        required: false
+        type: string
+        default: ""
+      subcommand:
+        description: Arguments appended after the entry script, e.g. "start-mcp-server".
+        required: false
+        type: string
+        default: ""
+      transport:
+        description: "Transport flag: stdio | none | auto (empty = auto)."
+        required: false
+        type: string
+        default: ""
+      no-probe:
+        description: Disable the --help auto-detection probe.
+        required: false
+        type: boolean
+        default: false
+      attach-to-release:
+        description: Attach the .mcpb files to the GitHub Release on a 'release' event.
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  build-mcpb:
+    name: Build .mcpb bundle
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write    # needed to attach assets to a release
+    steps:
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: latest
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install mcp2mcpb
+        shell: bash
+        env:
+          SPEC: ${{ inputs.mcp2mcpb-version }}
+        run: uv pip install --system "mcp2mcpb${SPEC}"
+
+      - name: Resolve version
+        id: resolve-version
+        shell: bash
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+        run: |
+          VERSION="$VERSION_INPUT"
+          if [[ -z "$VERSION" && -n "$GITHUB_REF_NAME" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          if [[ -z "$VERSION" ]]; then
+            echo "Error: could not resolve version. Set the 'version' input." >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build .mcpb bundle
+        shell: bash
+        env:
+          PACKAGE: ${{ inputs.package }}
+          REGISTRY: ${{ inputs.registry }}
+          VERSION: ${{ steps.resolve-version.outputs.version }}
+          MODE: ${{ inputs.mode }}
+          OUTPUT_DIR: ${{ inputs.output-dir }}
+          RUNNER: ${{ inputs.runner }}
+          ENTRY_SCRIPT: ${{ inputs.entry-script }}
+          EXTRAS: ${{ inputs.extras }}
+          SUBCOMMAND: ${{ inputs.subcommand }}
+          TRANSPORT: ${{ inputs.transport }}
+          NO_PROBE: ${{ inputs.no-probe }}
+        run: |
+          ARGS=( "$PACKAGE" --registry "$REGISTRY" --pin "$VERSION"
+                 --mode "$MODE" --output "$OUTPUT_DIR" )
+          [[ -n "$RUNNER" ]]       && ARGS+=( --runner "$RUNNER" )
+          [[ -n "$ENTRY_SCRIPT" ]] && ARGS+=( --entry-script "$ENTRY_SCRIPT" )
+          for extra in $EXTRAS; do ARGS+=( --extra "$extra" ); done
+          [[ -n "$SUBCOMMAND" ]]   && ARGS+=( --subcommand "$SUBCOMMAND" )
+          [[ -n "$TRANSPORT" ]]    && ARGS+=( --transport "$TRANSPORT" )
+          [[ "$NO_PROBE" == "true" ]] && ARGS+=( --no-probe )
+          python -m mcp2mcpb "${ARGS[@]}"
+
+      - name: Attach to GitHub Release
+        if: inputs.attach-to-release && github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ inputs.output-dir }}/*.mcpb
