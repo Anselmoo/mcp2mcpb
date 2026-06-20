@@ -163,6 +163,31 @@ On a `release` event the action attaches the produced `.mcpb` files to the GitHu
 release. For platform-specific Python bundles, run it in a matrix across
 `ubuntu-latest`, `macos-13`, `macos-latest`, and `windows-latest`.
 
+#### Pinning the action (security + pre-release testing)
+
+`@v1` is a floating major tag. For supply-chain safety, pin to a full commit SHA
+(immutable; [Dependabot](https://docs.github.com/en/code-security/dependabot)
+still bumps SHA pins):
+
+```yaml
+- uses: Anselmoo/mcp2mcpb@<full-commit-sha>   # immutable pin
+```
+
+To trial an unreleased build **before** it lands on [PyPI](https://pypi.org) — e.g.
+to test a commit across your repos without going productive — pin the action to the
+SHA *and* install the package straight from that commit via `mcp2mcpb-src`:
+
+```yaml
+- uses: Anselmoo/mcp2mcpb@<full-commit-sha>
+  with:
+    package: mcp-server-fetch
+    mode: reference
+    mcp2mcpb-src: "git+https://github.com/Anselmoo/mcp2mcpb.git@<full-commit-sha>"
+```
+
+`mcp2mcpb-src` (default `mcp2mcpb>=0.2`) is what the action `uv pip install`s, so it —
+not the action ref — controls which conversion logic runs.
+
 Or adopt the reusable workflow at the **job** level:
 
 ```yaml
