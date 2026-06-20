@@ -1,6 +1,6 @@
 [project]
 name = "mcp2mcpb"
-version = "0.2.1"
+version = "0.3.0"
 description = "Convert PyPI/npm MCP servers into one-click .mcpb bundles for Claude Desktop"
 readme = "README.md"
 license = { text = "MIT" }
