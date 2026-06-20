@@ -60,6 +60,14 @@ def _user_config_and_env(
     return user_config, env
 
 
+def _short_name(raw: str) -> str:
+    """Manifest identifier/display name: drop an npm scope (@scope/pkg → pkg).
+
+    No-op for PyPI names (which contain no '/' or '@').
+    """
+    return raw.rsplit("/", 1)[-1].lstrip("@")
+
+
 def _transport_flag(transport: Transport) -> list[str]:
     return ["--transport", "stdio"] if transport is Transport.STDIO else []
 
@@ -77,8 +85,14 @@ def render_mcp_config(
     meta: PackageMeta,
     mode: BundleMode,
     env: dict[str, str],
+    latest: bool = False,
 ) -> tuple[McpConfig, ServerType, str]:
-    """Render a resolved LaunchSpec into (mcp_config, server_type, entry_point)."""
+    """Render a resolved LaunchSpec into (mcp_config, server_type, entry_point).
+
+    When ``latest`` is true the launch command re-resolves the newest published
+    version on every start (npm/uvx ``pkg@latest``; uvx ``--from`` uses
+    ``--refresh-package`` since ``@latest`` is not a valid PEP 508 spec).
+    """
     tflag = _transport_flag(launch.transport)
     sub = list(launch.subcommand)
 
@@ -94,9 +108,13 @@ def render_mcp_config(
                 launch.entry_script is not None and launch.entry_script != source.name
             )
         if needs_from:
+            # `@latest` is invalid inside a `--from` (PEP 508) spec, so refresh the
+            # package's cached data instead to pull its newest release each launch.
+            refresh = ["--refresh-package", source.name] if latest else []
             args = [
                 "tool",
                 "run",
+                *refresh,
                 "--no-build",
                 "--from",
                 _from_spec(source, launch.extras),
@@ -105,11 +123,13 @@ def render_mcp_config(
                 *tflag,
             ]
         else:
-            args = ["tool", "run", "--no-build", source.pinned, *sub, *tflag]
+            spec = f"{source.name}@latest" if latest else source.pinned
+            args = ["tool", "run", "--no-build", spec, *sub, *tflag]
         return McpConfig(command="uv", args=args, env=env), ServerType.UV, ""
 
     if launch.runner is Runner.NPX:
-        args = ["-y", source.pinned, *sub, *tflag]
+        spec = f"{source.name}@latest" if latest else source.pinned
+        args = ["-y", spec, *sub, *tflag]
         return McpConfig(command="npx", args=args, env=env), ServerType.NODE, ""
 
     if launch.runner is Runner.UV_RUN:
@@ -159,19 +179,20 @@ def generate_manifest(
     source: PackageSource,
     mode: BundleMode,
     launch: LaunchSpec,
+    latest: bool = False,
 ) -> Manifest:
     """Synthesize a Manifest from package metadata + the resolved launch recipe."""
     user_config, env = _user_config_and_env(meta.detected_env_vars)
     mcp_config, server_type, entry_point = render_mcp_config(
-        launch, source, meta, mode, env
+        launch, source, meta, mode, env, latest=latest
     )
     server = ServerConfig(
         type=server_type, entry_point=entry_point, mcp_config=mcp_config
     )
     repository = RepositoryRef(url=meta.repository_url) if meta.repository_url else None
     return Manifest(
-        name=meta.name,
-        display_name=meta.name,
+        name=_short_name(meta.name),
+        display_name=_short_name(meta.name),
         version=meta.version,
         description=meta.description,
         author=ManifestAuthor(name=meta.author),

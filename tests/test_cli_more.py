@@ -57,6 +57,14 @@ def test_convert_reports_conversion_error() -> None:
     assert result.exit_code == 1
 
 
+def test_convert_latest_and_pin_conflict() -> None:
+    result = runner.invoke(
+        app, ["convert", "pkg", "--latest", "--pin", "1.0.0", "--no-probe"]
+    )
+    assert result.exit_code == 1
+    assert "mutually exclusive" in result.output
+
+
 @respx.mock
 async def test_convert_auto_includes_mcp_extra(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]

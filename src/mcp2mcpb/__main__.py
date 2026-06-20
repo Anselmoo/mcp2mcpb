@@ -112,6 +112,15 @@ def convert(
         str | None,
         typer.Option("--pin", "-v", help="Pin exact package version; omit for latest"),
     ] = None,
+    latest: Annotated[
+        bool,
+        typer.Option(
+            "--latest",
+            help="Always re-resolve the newest published version at launch "
+            "(npm/uvx `pkg@latest`; uvx `--from` uses `--refresh-package`). "
+            "Slower startup than the default cached resolution. Conflicts with --pin.",
+        ),
+    ] = False,
     output: Annotated[
         Path,
         typer.Option("--output", "-o", help="Output directory for .mcpb files"),
@@ -174,8 +183,12 @@ def convert(
     ] = False,
 ) -> None:
     """Convert a published MCP server into a .mcpb bundle."""
+    if latest and pin is not None:
+        ui.error("--latest and --pin are mutually exclusive; choose one.")
+        raise typer.Exit(code=1)
     # Version precedence: CLI --pin > cwd config `version` > latest.
-    version = _normalize_pin(pin) or load_sidecar_pin(Path.cwd())
+    # --latest forces unpinned resolution and ignores any sidecar pin.
+    version = None if latest else (_normalize_pin(pin) or load_sidecar_pin(Path.cwd()))
     source = PackageSource(registry=registry, name=package, version=version)
     cli_ov = _cli_overrides(
         runner=runner,
@@ -187,7 +200,15 @@ def convert(
     )
     try:
         asyncio.run(
-            _convert(source, output, mode, cli_ov, probe=not no_probe, verbose=verbose)
+            _convert(
+                source,
+                output,
+                mode,
+                cli_ov,
+                probe=not no_probe,
+                verbose=verbose,
+                latest=latest,
+            )
         )
     except McpbConversionError as exc:
         ui.error(str(exc))
@@ -201,6 +222,7 @@ async def _convert(
     cli_overrides: LaunchOverrides,
     probe: bool,
     verbose: bool = False,
+    latest: bool = False,
 ) -> None:
     ui.section(f"Converting {source.registry}/{source.name}")
     ui.info(f"Fetching metadata from {source.registry} …")
@@ -242,7 +264,8 @@ async def _convert(
     if verbose:
         config = _sidecar_source(Path.cwd())
         ui.info(f"Config file: {config}" if config else "Config file: none")
-        ui.info(f"Version: {source.version or 'latest'}")
+        ver = "latest (--latest)" if latest else (source.version or "latest")
+        ui.info(f"Version: {ver}")
         ui.info(
             "Resolved launch recipe — "
             f"runner={launch.runner}, entry_script={launch.entry_script}, "
@@ -255,7 +278,7 @@ async def _convert(
             f"Detected env vars: {', '.join(meta.detected_env_vars)} — "
             "these become user_config fields in the manifest."
         )
-    manifest = generate_manifest(meta, source, mode, launch)
+    manifest = generate_manifest(meta, source, mode, launch, latest=latest)
 
     with tempfile.TemporaryDirectory() as tmp_str:
         # Fixed working-dir name: the package name may contain '/' (scoped npm

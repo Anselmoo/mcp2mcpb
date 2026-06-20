@@ -20,6 +20,7 @@ import respx
 from typer.testing import CliRunner
 
 from mcp2mcpb.__main__ import _convert, app
+from mcp2mcpb.generator import _short_name
 from mcp2mcpb.models import (
     BundleMode,
     LaunchOverrides,
@@ -190,7 +191,8 @@ async def test_conversion_roundtrip(case: Case, tmp_path: Path, monkeypatch) -> 
         probe=False,
     )
 
-    filename = mcpb_filename(case.name, case.version, BundleMode.REFERENCE)
+    # The bundle filename follows the manifest name, which drops any npm scope.
+    filename = mcpb_filename(_short_name(case.name), case.version, BundleMode.REFERENCE)
     bundle = tmp_path / filename
     assert bundle.exists(), f"expected {filename} in {list(tmp_path.iterdir())}"
 

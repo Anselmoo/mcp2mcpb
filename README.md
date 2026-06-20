@@ -67,9 +67,18 @@ mcp2mcpb mcp-server-fetch \
     --mode complete \      # -m : complete (vendor deps) | reference (uvx/npx)
     --output dist/         # -o : output directory
 
+# Always pull the newest version at launch (reference mode)
+mcp2mcpb mcp-server-fetch --mode reference --latest
+
 # Print the version
 mcp2mcpb --version
 ```
+
+`--latest` makes the launch command re-resolve the newest published release on
+every start: npm/uvx use `pkg@latest`, and uvx `--from` recipes use
+`--refresh-package`. It conflicts with `--pin`, and trades startup speed for
+freshness (the default cached resolution is faster). Plain `--pin latest` (or
+omitting `--pin`) stays unpinned but lets uvx/npx reuse a cached version.
 
 When auto-detection isn't enough, spell out the launch recipe explicitly and skip
 the `--help` probe:

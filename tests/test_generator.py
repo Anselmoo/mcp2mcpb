@@ -362,6 +362,74 @@ def test_render_npx_bare() -> None:
     assert stype is ServerType.NODE
 
 
+def test_render_npx_latest() -> None:
+    spec = LaunchSpec(runner=Runner.NPX)
+    cfg, _, _ = render_mcp_config(
+        spec,
+        _src("@scope/server", reg=Registry.NPM),
+        _node_meta(),
+        BundleMode.REFERENCE,
+        {},
+        latest=True,
+    )
+    assert cfg.args == ["-y", "@scope/server@latest"]
+
+
+def test_render_uvx_bare_latest() -> None:
+    spec = LaunchSpec(runner=Runner.UVX)
+    cfg, _, _ = render_mcp_config(
+        spec,
+        _src("mcp-server-analyzer"),
+        _python_meta(),
+        BundleMode.REFERENCE,
+        {},
+        latest=True,
+    )
+    assert cfg.args == ["tool", "run", "--no-build", "mcp-server-analyzer@latest"]
+
+
+def test_render_uvx_from_latest_uses_refresh_package() -> None:
+    # `@latest` is invalid in a `--from` (PEP 508) spec → refresh the package.
+    # --latest forces an unpinned source, so --from carries no version.
+    spec = LaunchSpec(runner=Runner.UVX, entry_script="rrt-mcp", extras=["mcp"])
+    source = PackageSource(registry=Registry.PYPI, name="repo-release-tools")
+    cfg, _, _ = render_mcp_config(
+        spec,
+        source,
+        _python_meta(),
+        BundleMode.REFERENCE,
+        {},
+        latest=True,
+    )
+    assert cfg.args == [
+        "tool",
+        "run",
+        "--refresh-package",
+        "repo-release-tools",
+        "--no-build",
+        "--from",
+        "repo-release-tools[mcp]",
+        "rrt-mcp",
+    ]
+
+
+def test_manifest_drops_npm_scope_from_name() -> None:
+    meta = _node_meta().model_copy(
+        update={"name": "@modelcontextprotocol/server-sequential-thinking"}
+    )
+    source = PackageSource(
+        registry=Registry.NPM, name="@modelcontextprotocol/server-sequential-thinking"
+    )
+    manifest = generate_manifest(
+        meta,
+        source,
+        BundleMode.REFERENCE,
+        default_launch(source.registry, BundleMode.REFERENCE),
+    )
+    assert manifest.name == "server-sequential-thinking"
+    assert manifest.display_name == "server-sequential-thinking"
+
+
 def test_render_transport_stdio_appends_flag() -> None:
     spec = LaunchSpec(runner=Runner.UVX, transport=Transport.STDIO)
     cfg, _, _ = render_mcp_config(
