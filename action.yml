@@ -1,9 +1,5 @@
 name: Build .mcpb bundle
-description: >
-  Convert a published PyPI or npm MCP server package into one or more
-  .mcpb bundles and optionally attach them to the current GitHub Release.
-  Supports both 'complete' (vendor all deps) and 'reference' (uvx/npx)
-  bundle modes.
+description: "Build .mcpb bundles from PyPI/npm MCP servers for one-click Claude Desktop install. Supports complete and reference modes."
 author: Anselmoo
 branding:
   icon: package
@@ -98,7 +94,7 @@ inputs:
     description: >
       Install source for mcp2mcpb (e.g. package spec or local path).
     required: false
-    default: "mcp2mcpb>=0.1"
+    default: "mcp2mcpb>=0.2"
 
 outputs:
   mcpb-files:
