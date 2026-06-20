@@ -102,6 +102,7 @@ CASES: list[Case] = [
         expected_args=[
             "tool",
             "run",
+            "--no-build",
             "--from",
             "mcp-zen-of-languages==1.2.0",
             "zen-mcp",
@@ -118,6 +119,7 @@ CASES: list[Case] = [
         expected_args=[
             "tool",
             "run",
+            "--no-build",
             "--from",
             "repo-release-tools[mcp]==1.9.0",
             "rrt-mcp",
@@ -136,6 +138,7 @@ CASES: list[Case] = [
         expected_args=[
             "tool",
             "run",
+            "--no-build",
             "--from",
             "serena-agent==1.5.3",
             "serena",
@@ -250,6 +253,7 @@ def test_config_file_drives_version_and_recipe(tmp_path: Path, monkeypatch) -> N
     assert manifest["server"]["mcp_config"]["args"] == [
         "tool",
         "run",
+        "--no-build",
         "--from",
         "serena-agent==1.5.3",
         "serena",

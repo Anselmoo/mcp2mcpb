@@ -269,7 +269,7 @@ def test_render_uvx_bare() -> None:
         spec, _src("mcp-server-analyzer"), _python_meta(), BundleMode.REFERENCE, {}
     )
     assert cfg.command == "uv"
-    assert cfg.args == ["tool", "run", "mcp-server-analyzer==1.0.0"]
+    assert cfg.args == ["tool", "run", "--no-build", "mcp-server-analyzer==1.0.0"]
     assert stype is ServerType.UV
     assert entry == ""
 
@@ -282,6 +282,7 @@ def test_render_uvx_from_named_script() -> None:
     assert cfg.args == [
         "tool",
         "run",
+        "--no-build",
         "--from",
         "mcp-zen-of-languages==1.0.0",
         "mcp-zen-of-languages-server",
@@ -296,6 +297,7 @@ def test_render_uvx_from_extras() -> None:
     assert cfg.args == [
         "tool",
         "run",
+        "--no-build",
         "--from",
         "repo-release-tools[mcp]==1.0.0",
         "rrt-mcp",
@@ -312,6 +314,7 @@ def test_render_uvx_subcommand() -> None:
     assert cfg.args == [
         "tool",
         "run",
+        "--no-build",
         "--from",
         "serena-agent==1.0.0",
         "serena",
@@ -329,6 +332,7 @@ def test_render_uvx_force_from_when_name_matches() -> None:
     assert cfg.args == [
         "tool",
         "run",
+        "--no-build",
         "--from",
         "mcp-server-analyzer==1.0.0",
         "mcp-server-analyzer",
@@ -341,7 +345,7 @@ def test_render_uvx_suppress_from_overrides_heuristic() -> None:
     cfg, _, _ = render_mcp_config(
         spec, _src("serena-agent"), _python_meta(), BundleMode.REFERENCE, {}
     )
-    assert cfg.args == ["tool", "run", "serena-agent==1.0.0"]
+    assert cfg.args == ["tool", "run", "--no-build", "serena-agent==1.0.0"]
 
 
 def test_render_npx_bare() -> None:

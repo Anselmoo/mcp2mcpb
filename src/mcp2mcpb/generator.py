@@ -83,6 +83,10 @@ def render_mcp_config(
     sub = list(launch.subcommand)
 
     if launch.runner is Runner.UVX:
+        # `--no-build` keeps extension launch wheel-only: never compile deps at
+        # startup. A missing/arch-mismatched wheel then fails fast with a clear
+        # "no compatible wheel" error instead of a native build (e.g. cryptography
+        # → openssl-sys cross-compile crashes when an x86_64 uv runs on arm64).
         if launch.from_spec is not None:
             needs_from = launch.from_spec
         else:
@@ -93,6 +97,7 @@ def render_mcp_config(
             args = [
                 "tool",
                 "run",
+                "--no-build",
                 "--from",
                 _from_spec(source, launch.extras),
                 launch.entry_script or source.name,
@@ -100,7 +105,7 @@ def render_mcp_config(
                 *tflag,
             ]
         else:
-            args = ["tool", "run", source.pinned, *sub, *tflag]
+            args = ["tool", "run", "--no-build", source.pinned, *sub, *tflag]
         return McpConfig(command="uv", args=args, env=env), ServerType.UV, ""
 
     if launch.runner is Runner.NPX:

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Reference-mode bundles now invoke `uv tool run --no-build …` so extensions never
+  compile dependencies at launch — a missing/arch-mismatched wheel fails fast with a
+  clear "no compatible wheel" error instead of a native build failure.
+
+### Documentation
+- README: troubleshooting note for Apple-Silicon machines where an Intel Homebrew `uv`
+  shadows the arm64 `uv` and triggers cross-compile failures (e.g. `cryptography` /
+  `openssl-sys`).
+
 ## [0.2.1] - 2026-06-20
 ### Fixed
 - `action.yml` description shortened to meet GitHub Marketplace 125-character limit.

@@ -454,6 +454,40 @@ own Node.js runtime), so a single `universal`-tagged bundle covers every platfor
 
 ---
 
+## Troubleshooting
+
+### `reference` bundle fails to start on Apple Silicon (Intel `uv` shadowing)
+
+**Symptom** — A `reference`-mode bundle shows *“Unable to connect to extension
+server”* in [Claude Desktop](https://claude.ai/download), and the extension log
+shows `uv … x86_64-apple-darwin` trying to **build** a native dependency such as
+[`cryptography`](https://pypi.org/project/cryptography/) / `openssl-sys`, with
+`$HOST = aarch64-apple-darwin` and `$TARGET = x86_64-apple-darwin`.
+
+**Cause** — You have **two** [`uv`](https://docs.astral.sh/uv/) installs: an Intel
+one at `/usr/local/bin/uv` (from Intel [Homebrew](https://brew.sh)) and the native
+arm64 one at `/opt/homebrew/bin/uv`. Claude Desktop resolves `/usr/local/bin`
+first, so it launches the **x86_64** `uv` under Rosetta. When a dependency ships
+**arm64-only** wheels (cryptography 49.x has no macOS x86_64 wheel), that `uv`
+can’t find a matching wheel and falls back to a source build, which cross-compiles
+and crashes in `openssl-sys`. `reference` bundles already pass `--no-build`, so you
+get a clear “no compatible wheel” error rather than a long native-build traceback —
+but the real fix is to use the native `uv`.
+
+**Fix** — Make Claude resolve the arm64 `uv`, then fully restart it:
+
+```bash
+rm -f /usr/local/bin/uv /usr/local/bin/uvx   # or: arch -x86_64 /usr/local/bin/brew uninstall uv
+which -a uv      # should now show only /opt/homebrew/bin/uv
+uv --version     # expect: … aarch64-apple-darwin
+```
+
+Quit Claude Desktop completely (it caches `PATH` at launch), relaunch, then
+re-enable / re-drag the extension. The arm64 `uv` pulls the prebuilt arm64 wheel —
+no compile.
+
+---
+
 ## Releasing
 
 The `cicd.yml` workflow runs lint + types
