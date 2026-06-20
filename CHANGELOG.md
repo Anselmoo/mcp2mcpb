@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06-20
 ### Fixed
 - `action.yml` description shortened to meet GitHub Marketplace 125-character limit.
 - `mcp2mcpb-src` default install spec bumped to `mcp2mcpb>=0.2`.
