@@ -13,9 +13,9 @@ from email import message_from_string
 from email.message import Message
 from pathlib import Path
 
-from mcp2mcpb import inspector
+from mcp2mcpb import inspector, ui
 from mcp2mcpb.exceptions import RegistryFetchError
-from mcp2mcpb.models import PackageMeta, PackageSource, ServerType
+from mcp2mcpb.models import PackageMeta, PackageSource, Registry, ServerType
 
 
 class ArtifactKind(enum.Enum):
@@ -165,3 +165,34 @@ async def _meta_from_wheel(archive: Path, source: PackageSource) -> PackageMeta:
         repository_url=repo,
         requires_python=msg.get("Requires-Python") or None,
     )
+
+
+_KIND_REGISTRY: dict[ArtifactKind, Registry] = {
+    ArtifactKind.WHEEL: Registry.PYPI,
+    ArtifactKind.NPM: Registry.NPM,
+}
+
+
+async def inspect_local(path: Path, source: PackageSource) -> tuple[PackageMeta, Path]:
+    """Return ``(PackageMeta, archive)`` from a local artifact — no network.
+
+    Drop-in replacement for :func:`mcp2mcpb.fetcher.fetch` when a locally-built
+    wheel / npm tarball is supplied via ``--from-dist``.
+    """
+    archive, kind = resolve_artifact(path)
+    expected = _KIND_REGISTRY[kind]
+    if expected is not source.registry:
+        raise RegistryFetchError(
+            f"artifact {archive.name} is a {kind.value} package, which does not "
+            f"match --registry {source.registry.value}"
+        )
+    if kind is ArtifactKind.WHEEL:
+        meta = await _meta_from_wheel(archive, source)
+    else:
+        meta = await _meta_from_npm(archive, source)
+    if source.version and source.version != meta.version:
+        ui.warning(
+            f"--pin {source.version} ignored; using the artifact's version "
+            f"{meta.version}"
+        )
+    return meta, archive

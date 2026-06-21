@@ -10,6 +10,7 @@ from mcp2mcpb.local_source import (
     ArtifactKind,
     _meta_from_npm,
     _meta_from_wheel,
+    inspect_local,
     resolve_artifact,
 )
 from mcp2mcpb.models import PackageSource, Registry, ServerType
@@ -94,3 +95,37 @@ async def test_meta_from_wheel_reads_metadata(tmp_path: Path) -> None:
     assert meta.version == "2.3.0"
     assert meta.server_type is ServerType.PYTHON
     assert meta.entry.command  # entry point detected from the wheel
+
+
+async def test_inspect_local_wheel_returns_meta_and_path(tmp_path: Path) -> None:
+    whl = tmp_path / "demo-pkg-2.3.0-py3-none-any.whl"
+    whl.write_bytes(
+        build_wheel_bytes(
+            "demo-pkg", "2.3.0", console_scripts={"demo-pkg": "demo_pkg.__main__:main"}
+        )
+    )
+    source = PackageSource(registry=Registry.PYPI, name="demo-pkg", version=None)
+    meta, archive = await inspect_local(whl, source)
+    assert meta.version == "2.3.0"
+    assert archive == whl
+
+
+async def test_inspect_local_rejects_kind_registry_mismatch(tmp_path: Path) -> None:
+    whl = tmp_path / "demo-pkg-2.3.0-py3-none-any.whl"
+    whl.write_bytes(build_wheel_bytes("demo-pkg", "2.3.0"))
+    source = PackageSource(registry=Registry.NPM, name="demo-pkg", version=None)
+    with pytest.raises(RegistryFetchError, match="does not match"):
+        await inspect_local(whl, source)
+
+
+async def test_inspect_local_warns_on_pin_mismatch(tmp_path: Path, capsys) -> None:
+    whl = tmp_path / "demo-pkg-2.3.0-py3-none-any.whl"
+    whl.write_bytes(
+        build_wheel_bytes(
+            "demo-pkg", "2.3.0", console_scripts={"demo-pkg": "demo_pkg.__main__:main"}
+        )
+    )
+    source = PackageSource(registry=Registry.PYPI, name="demo-pkg", version="1.0.0")
+    meta, _ = await inspect_local(whl, source)
+    assert meta.version == "2.3.0"  # artifact wins
+    assert "1.0.0" in capsys.readouterr().out
