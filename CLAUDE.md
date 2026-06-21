@@ -19,13 +19,18 @@ Run `uv run poe check` and confirm it's green before claiming work is done.
 ## CLI
 
 ```bash
-mcp2mcpb <package> [-r pypi|npm] [-v VERSION] [-m complete|reference] [--no-probe] [--verbose]
+mcp2mcpb <package> [-r pypi|npm] [-v VERSION] [-m complete|reference] [--from-dist PATH] [--no-probe] [--verbose]
 mcp2mcpb unpack <bundle.mcpb> [-o DIR]
 ```
 
 `mcp2mcpb <package>` works without typing `convert`: `__main__.main()` injects the
 implicit `convert` command (the Typer app is a multi-command group). Preserve that
 wrapper when touching the CLI.
+
+- `--from-dist PATH` builds from a locally-built wheel / npm `.tgz` (or a dir
+  containing one) and skips the registry fetch — use it in release CI to bundle
+  the version being shipped before it is published. `--registry` still selects
+  the runtime target (uvx/npx). Implies `--no-probe`.
 
 ## Architecture (`src/mcp2mcpb/`)
 
