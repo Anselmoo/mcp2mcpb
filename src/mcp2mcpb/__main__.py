@@ -167,6 +167,15 @@ def convert(
             "entry-script)",
         ),
     ] = None,
+    from_dist: Annotated[
+        Path | None,
+        typer.Option(
+            "--from-dist",
+            help="Build from a locally-built artifact (wheel / npm .tgz, or a "
+            "directory containing one) instead of fetching from the registry. "
+            "The manifest still targets --registry at runtime.",
+        ),
+    ] = None,
     no_probe: Annotated[
         bool,
         typer.Option(
@@ -198,6 +207,10 @@ def convert(
         transport=transport,
         from_spec=from_spec,
     )
+    probe = not no_probe
+    if from_dist is not None and probe:
+        ui.warning("--from-dist set; skipping the --help probe")
+        probe = False
     try:
         asyncio.run(
             _convert(
@@ -205,9 +218,10 @@ def convert(
                 output,
                 mode,
                 cli_ov,
-                probe=not no_probe,
+                probe=probe,
                 verbose=verbose,
                 latest=latest,
+                from_dist=from_dist,
             )
         )
     except McpbConversionError as exc:
@@ -223,10 +237,17 @@ async def _convert(
     probe: bool,
     verbose: bool = False,
     latest: bool = False,
+    from_dist: Path | None = None,
 ) -> None:
     ui.section(f"Converting {source.registry}/{source.name}")
-    ui.info(f"Fetching metadata from {source.registry} …")
-    meta, archive = await fetch(source)
+    if from_dist is not None:
+        from mcp2mcpb.local_source import inspect_local
+
+        ui.info(f"Reading metadata from {from_dist} …")
+        meta, archive = await inspect_local(from_dist, source)
+    else:
+        ui.info(f"Fetching metadata from {source.registry} …")
+        meta, archive = await fetch(source)
     ui.success(f"Found {meta.name} {meta.version}")
 
     candidates = candidate_scripts(archive, source)
@@ -287,7 +308,15 @@ async def _convert(
         bundle_dir.mkdir()
         if mode == BundleMode.COMPLETE:
             ui.section("Bundling dependencies")
-            await bundle(source, meta, bundle_dir, mode, archive, launch)
+            await bundle(
+                source,
+                meta,
+                bundle_dir,
+                mode,
+                archive,
+                launch,
+                local_wheel=(archive if from_dist is not None else None),
+            )
             ui.success("Dependencies vendored")
         ui.section("Packing .mcpb")
         out_path = pack_mcpb(bundle_dir, manifest, output, mode)

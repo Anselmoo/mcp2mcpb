@@ -54,7 +54,7 @@ on:
         description: Version spec of the mcp2mcpb package to install from PyPI.
         required: false
         type: string
-        default: ">=0.1"
+        default: ">=0.5"
       runner:
         description: "Launch runner: uvx | npx | uv-run | python | node (empty = infer)."
         required: false
@@ -85,6 +85,15 @@ on:
         required: false
         type: boolean
         default: false
+      artifact-name:
+        description: >
+          Name of an artifact (uploaded by a prior job via
+          actions/upload-artifact) containing the locally-built wheel / npm
+          '.tgz'. When set, it is downloaded into dist/ and the bundle is built
+          from it instead of fetching from the registry.
+        required: false
+        type: string
+        default: ""
       attach-to-release:
         description: Attach the .mcpb files to the GitHub Release on a 'release' event.
         required: false
@@ -114,30 +123,22 @@ jobs:
           SPEC: ${{ inputs.mcp2mcpb-version }}
         run: uv pip install --system "mcp2mcpb${SPEC}"
 
-      - name: Resolve version
-        id: resolve-version
-        shell: bash
-        env:
-          VERSION_INPUT: ${{ inputs.version }}
-        run: |
-          VERSION="$VERSION_INPUT"
-          if [[ -z "$VERSION" && -n "$GITHUB_REF_NAME" ]]; then
-            VERSION="${GITHUB_REF_NAME#v}"
-          fi
-          if [[ -z "$VERSION" ]]; then
-            echo "Error: could not resolve version. Set the 'version' input." >&2
-            exit 1
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Download build artifact
+        if: inputs.artifact-name != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: dist
 
       - name: Build .mcpb bundle
         shell: bash
         env:
           PACKAGE: ${{ inputs.package }}
           REGISTRY: ${{ inputs.registry }}
-          VERSION: ${{ steps.resolve-version.outputs.version }}
+          VERSION: ${{ inputs.version }}
           MODE: ${{ inputs.mode }}
           OUTPUT_DIR: ${{ inputs.output-dir }}
+          FROM_DIST: ${{ inputs.artifact-name != '' && 'dist' || '' }}
           RUNNER: ${{ inputs.runner }}
           ENTRY_SCRIPT: ${{ inputs.entry-script }}
           EXTRAS: ${{ inputs.extras }}
@@ -145,14 +146,9 @@ jobs:
           TRANSPORT: ${{ inputs.transport }}
           NO_PROBE: ${{ inputs.no-probe }}
         run: |
-          ARGS=( "$PACKAGE" --registry "$REGISTRY" --pin "$VERSION"
-                 --mode "$MODE" --output "$OUTPUT_DIR" )
-          [[ -n "$RUNNER" ]]       && ARGS+=( --runner "$RUNNER" )
-          [[ -n "$ENTRY_SCRIPT" ]] && ARGS+=( --entry-script "$ENTRY_SCRIPT" )
-          for extra in $EXTRAS; do ARGS+=( --extra "$extra" ); done
-          [[ -n "$SUBCOMMAND" ]]   && ARGS+=( --subcommand "$SUBCOMMAND" )
-          [[ -n "$TRANSPORT" ]]    && ARGS+=( --transport "$TRANSPORT" )
-          [[ "$NO_PROBE" == "true" ]] && ARGS+=( --no-probe )
+          ARGS_FILE="$(mktemp)"
+          python -m mcp2mcpb._ci_args > "$ARGS_FILE"   # exits non-zero (with a clear stderr message) if the version can't be resolved
+          mapfile -t ARGS < "$ARGS_FILE"
           python -m mcp2mcpb "${ARGS[@]}"
 
       - name: Attach to GitHub Release

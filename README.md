@@ -106,6 +106,21 @@ $ mcp2mcpb repo-release-tools --extra mcp --entry-script rrt-mcp \
 → Resolved launch recipe — runner=uvx, entry_script=rrt-mcp, extras=['mcp'], subcommand=[], transport=stdio
 ```
 
+### Building from a local artifact
+
+For release pipelines that build and publish in one run, use `--from-dist` to bundle a
+locally-built wheel or npm `.tgz` before uploading to the registry:
+
+```bash
+# In CI, after `uv build` produced dist/*.whl:
+mcp2mcpb my-server --registry pypi --from-dist dist/ --mode reference
+```
+
+`--from-dist PATH` accepts a path to a `.whl`, `.tgz`, or a directory containing
+exactly one such file. The bundle still references `--registry` (PyPI/npm) at
+runtime, so Claude Desktop installs the published version once it lands. The
+`--help` probe is skipped automatically.
+
 ### Command line — with a config file
 
 Put the recipe in a `.mcpb.toml` (read from the current working directory) or a

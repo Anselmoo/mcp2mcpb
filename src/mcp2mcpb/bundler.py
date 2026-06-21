@@ -63,9 +63,17 @@ async def _run(*cmd: str) -> None:
         )
 
 
-def _python_install_spec(source: PackageSource, launch: LaunchSpec) -> str:
-    """Return the pip install specifier, including extras when set."""
+def _python_install_spec(
+    source: PackageSource, launch: LaunchSpec, local_wheel: Path | None = None
+) -> str:
+    """Return the pip install specifier, including extras when set.
+
+    With ``local_wheel`` set (``--from-dist``), install the local wheel file
+    directly so an unreleased version never has to be fetched from PyPI.
+    """
     extra = f"[{','.join(launch.extras)}]" if launch.extras else ""
+    if local_wheel is not None:
+        return f"{local_wheel}{extra}"
     pin = f"=={source.version}" if source.version else ""
     return f"{source.name}{extra}{pin}"
 
@@ -159,6 +167,8 @@ async def bundle(
     mode: BundleMode,
     archive: Path,
     launch: LaunchSpec,
+    *,
+    local_wheel: Path | None = None,
 ) -> None:
     """Vendor dependencies into ``dest/server/`` for ``complete`` bundles."""
     if mode == BundleMode.REFERENCE:
@@ -167,7 +177,9 @@ async def bundle(
     server_dir = dest / "server"
     match meta.server_type:
         case ServerType.PYTHON:
-            await _bundle_python(_python_install_spec(source, launch), server_dir)
+            await _bundle_python(
+                _python_install_spec(source, launch, local_wheel), server_dir
+            )
         case ServerType.NODE:
             await _bundle_node(archive, server_dir)
         case ServerType.BINARY:

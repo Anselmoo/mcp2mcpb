@@ -348,3 +348,55 @@ async def test_bundle_binary_raises(tmp_path: Path) -> None:
             tmp_path / "p.whl",
             LaunchSpec(runner=Runner.PYTHON),
         )
+
+
+# ── local wheel install (complete mode) ──────────────────────────────────────
+
+
+def _demo_py_meta() -> PackageMeta:
+    return PackageMeta(
+        name="demo-pkg",
+        version="2.3.0",
+        description="d",
+        author="a",
+        server_type=ServerType.PYTHON,
+        entry=EntryPoint(command="python", args=[], entry_file="server/__main__.py"),
+    )
+
+
+async def test_complete_python_installs_local_wheel(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[tuple[str, ...]] = []
+
+    async def fake_run(*cmd: str) -> None:
+        calls.append(cmd)
+
+    async def yes() -> bool:
+        return True
+
+    monkeypatch.setattr(bundler, "_run", fake_run)
+    monkeypatch.setattr(bundler, "_uv_available", yes)
+    monkeypatch.setattr(bundler, "_ship_licenses", lambda *a, **k: _noop())
+
+    wheel = tmp_path / "demo_pkg-2.3.0-py3-none-any.whl"
+    wheel.write_bytes(b"x")
+    source = PackageSource(registry=Registry.PYPI, name="demo-pkg", version="2.3.0")
+    launch = LaunchSpec(runner=Runner.UV_RUN, extras=["mcp"])
+
+    await bundler.bundle(
+        source,
+        _demo_py_meta(),
+        tmp_path / "b",
+        BundleMode.COMPLETE,
+        wheel,
+        launch,
+        local_wheel=wheel,
+    )
+
+    install_cmd = next(c for c in calls if "install" in c)
+    assert str(wheel) + "[mcp]" in install_cmd
+
+
+async def _noop() -> None:
+    return None
