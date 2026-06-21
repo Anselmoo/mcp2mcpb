@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `.github/dependabot.yml` (pip + github-actions, weekly) so the SHA-pin
   documentation's Dependabot claim is actually practiced by this repo.
+- `.pre-commit-config.yaml` (ruff, ruff-format, ty via `uv run`, plus standard
+  file-hygiene hooks); the CI `lint` job now runs `pre-commit run --all-files`.
 
 ### Changed
 - The `github-release` CI job now auto-appends an immutable commit-SHA pin block
