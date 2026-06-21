@@ -269,7 +269,7 @@ def test_render_uvx_bare() -> None:
         spec, _src("mcp-server-analyzer"), _python_meta(), BundleMode.REFERENCE, {}
     )
     assert cfg.command == "uv"
-    assert cfg.args == ["tool", "run", "mcp-server-analyzer==1.0.0"]
+    assert cfg.args == ["tool", "run", "--no-build", "mcp-server-analyzer==1.0.0"]
     assert stype is ServerType.UV
     assert entry == ""
 
@@ -282,6 +282,7 @@ def test_render_uvx_from_named_script() -> None:
     assert cfg.args == [
         "tool",
         "run",
+        "--no-build",
         "--from",
         "mcp-zen-of-languages==1.0.0",
         "mcp-zen-of-languages-server",
@@ -296,6 +297,7 @@ def test_render_uvx_from_extras() -> None:
     assert cfg.args == [
         "tool",
         "run",
+        "--no-build",
         "--from",
         "repo-release-tools[mcp]==1.0.0",
         "rrt-mcp",
@@ -312,6 +314,7 @@ def test_render_uvx_subcommand() -> None:
     assert cfg.args == [
         "tool",
         "run",
+        "--no-build",
         "--from",
         "serena-agent==1.0.0",
         "serena",
@@ -329,6 +332,7 @@ def test_render_uvx_force_from_when_name_matches() -> None:
     assert cfg.args == [
         "tool",
         "run",
+        "--no-build",
         "--from",
         "mcp-server-analyzer==1.0.0",
         "mcp-server-analyzer",
@@ -341,7 +345,7 @@ def test_render_uvx_suppress_from_overrides_heuristic() -> None:
     cfg, _, _ = render_mcp_config(
         spec, _src("serena-agent"), _python_meta(), BundleMode.REFERENCE, {}
     )
-    assert cfg.args == ["tool", "run", "serena-agent==1.0.0"]
+    assert cfg.args == ["tool", "run", "--no-build", "serena-agent==1.0.0"]
 
 
 def test_render_npx_bare() -> None:
@@ -356,6 +360,74 @@ def test_render_npx_bare() -> None:
     assert cfg.command == "npx"
     assert cfg.args == ["-y", "mcp-ai-agent-guidelines@1.0.0"]
     assert stype is ServerType.NODE
+
+
+def test_render_npx_latest() -> None:
+    spec = LaunchSpec(runner=Runner.NPX)
+    cfg, _, _ = render_mcp_config(
+        spec,
+        _src("@scope/server", reg=Registry.NPM),
+        _node_meta(),
+        BundleMode.REFERENCE,
+        {},
+        latest=True,
+    )
+    assert cfg.args == ["-y", "@scope/server@latest"]
+
+
+def test_render_uvx_bare_latest() -> None:
+    spec = LaunchSpec(runner=Runner.UVX)
+    cfg, _, _ = render_mcp_config(
+        spec,
+        _src("mcp-server-analyzer"),
+        _python_meta(),
+        BundleMode.REFERENCE,
+        {},
+        latest=True,
+    )
+    assert cfg.args == ["tool", "run", "--no-build", "mcp-server-analyzer@latest"]
+
+
+def test_render_uvx_from_latest_uses_refresh_package() -> None:
+    # `@latest` is invalid in a `--from` (PEP 508) spec → refresh the package.
+    # --latest forces an unpinned source, so --from carries no version.
+    spec = LaunchSpec(runner=Runner.UVX, entry_script="rrt-mcp", extras=["mcp"])
+    source = PackageSource(registry=Registry.PYPI, name="repo-release-tools")
+    cfg, _, _ = render_mcp_config(
+        spec,
+        source,
+        _python_meta(),
+        BundleMode.REFERENCE,
+        {},
+        latest=True,
+    )
+    assert cfg.args == [
+        "tool",
+        "run",
+        "--refresh-package",
+        "repo-release-tools",
+        "--no-build",
+        "--from",
+        "repo-release-tools[mcp]",
+        "rrt-mcp",
+    ]
+
+
+def test_manifest_drops_npm_scope_from_name() -> None:
+    meta = _node_meta().model_copy(
+        update={"name": "@modelcontextprotocol/server-sequential-thinking"}
+    )
+    source = PackageSource(
+        registry=Registry.NPM, name="@modelcontextprotocol/server-sequential-thinking"
+    )
+    manifest = generate_manifest(
+        meta,
+        source,
+        BundleMode.REFERENCE,
+        default_launch(source.registry, BundleMode.REFERENCE),
+    )
+    assert manifest.name == "server-sequential-thinking"
+    assert manifest.display_name == "server-sequential-thinking"
 
 
 def test_render_transport_stdio_appends_flag() -> None:
