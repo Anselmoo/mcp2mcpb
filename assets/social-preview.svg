@@ -1,13 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="mcp2mcpb social preview">
   <rect width="1280" height="640" fill="#0d1117"/>
-  <rect x="0" y="0" width="1280" height="8" fill="#1f6feb"/>
-  <g transform="translate(120,210)">
-    <rect width="200" height="200" rx="36" fill="#1f6feb"/>
-    <path d="M62 70 L100 50 L138 70 L138 130 L100 150 L62 130 Z" fill="none" stroke="#fff" stroke-width="8" stroke-linejoin="round"/>
-    <path d="M62 70 L100 90 L138 70" fill="none" stroke="#fff" stroke-width="8" stroke-linejoin="round"/>
-    <line x1="100" y1="90" x2="100" y2="150" stroke="#fff" stroke-width="8"/>
+  <rect width="1280" height="8" fill="#1f6feb"/>
+  <!-- wordmark with the "2" (= "to") highlighted -->
+  <text x="640" y="244" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="108" fill="#e6edf3">mcp<tspan fill="#58a6ff">2</tspan>mcpb</text>
+  <text x="640" y="306" text-anchor="middle" font-family="-apple-system,Segoe UI,sans-serif" font-size="34" fill="#9fb3c8">PyPI / npm MCP servers → one-click .mcpb bundles for Claude Desktop</text>
+  <!-- conversion flow, centered: PyPI / npm  →  .mcpb  →  Claude -->
+  <g transform="translate(322,398)" font-family="-apple-system,Segoe UI,sans-serif" font-size="26">
+    <rect x="0" y="0" width="124" height="58" rx="14" fill="#3775a9"/>
+    <text x="62" y="38" text-anchor="middle" fill="#ffffff">PyPI</text>
+    <rect x="144" y="0" width="124" height="58" rx="14" fill="#cb3837"/>
+    <text x="206" y="38" text-anchor="middle" fill="#ffffff">npm</text>
+    <line x1="288" y1="29" x2="350" y2="29" stroke="#3a4a5a" stroke-width="5"/>
+    <path d="M350 29 l-13 -8 0 16 z" fill="#3a4a5a"/>
+    <rect x="366" y="0" width="166" height="58" rx="14" fill="#1f6feb"/>
+    <text x="449" y="39" text-anchor="middle" fill="#ffffff" font-family="ui-monospace,Menlo,monospace">.mcpb</text>
+    <line x1="548" y1="29" x2="610" y2="29" stroke="#3a4a5a" stroke-width="5"/>
+    <path d="M610 29 l-13 -8 0 16 z" fill="#3a4a5a"/>
+    <path d="M630 29 l5 12 12 5 -12 5 -5 12 -5 -12 -12 -5 12 -5 z" fill="#d97757"/>
   </g>
-  <text x="380" y="300" font-family="ui-monospace,Menlo,monospace" font-size="96" fill="#e6edf3">mcp2mcpb</text>
-  <text x="384" y="372" font-family="-apple-system,Segoe UI,sans-serif" font-size="40" fill="#9fb3c8">PyPI / npm MCP servers → one-click .mcpb bundles</text>
-  <text x="384" y="430" font-family="-apple-system,Segoe UI,sans-serif" font-size="28" fill="#6e7d8f">for Claude Desktop · Python 3.12+ · MIT</text>
+  <text x="640" y="558" text-anchor="middle" font-family="-apple-system,Segoe UI,sans-serif" font-size="24" fill="#6e7d8f">Python 3.12+ · MIT · uvx / npx reference bundles</text>
 </svg>
