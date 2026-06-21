@@ -6,7 +6,8 @@ import pytest
 from factories import build_npm_tarball_bytes, build_wheel_bytes
 
 from mcp2mcpb.exceptions import RegistryFetchError
-from mcp2mcpb.local_source import ArtifactKind, resolve_artifact
+from mcp2mcpb.local_source import ArtifactKind, _meta_from_wheel, resolve_artifact
+from mcp2mcpb.models import PackageSource, Registry, ServerType
 
 
 def _write(path: Path, data: bytes) -> Path:
@@ -60,3 +61,20 @@ def test_multiple_wheels_error(tmp_path: Path) -> None:
 def test_missing_path_errors(tmp_path: Path) -> None:
     with pytest.raises(RegistryFetchError, match="not found"):
         resolve_artifact(tmp_path / "nope")
+
+
+async def test_meta_from_wheel_reads_metadata(tmp_path: Path) -> None:
+    whl = tmp_path / "demo-pkg-2.3.0-py3-none-any.whl"
+    whl.write_bytes(
+        build_wheel_bytes(
+            "demo-pkg",
+            "2.3.0",
+            console_scripts={"demo-pkg": "demo_pkg.__main__:main"},
+        )
+    )
+    source = PackageSource(registry=Registry.PYPI, name="demo-pkg", version="2.3.0")
+    meta = await _meta_from_wheel(whl, source)
+    assert meta.name == "demo-pkg"
+    assert meta.version == "2.3.0"
+    assert meta.server_type is ServerType.PYTHON
+    assert meta.entry.command  # entry point detected from the wheel

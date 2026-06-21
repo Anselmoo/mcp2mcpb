@@ -8,9 +8,14 @@ a PR build) can be bundled without contacting PyPI or npm. No network access.
 from __future__ import annotations
 
 import enum
+import zipfile
+from email import message_from_string
+from email.message import Message
 from pathlib import Path
 
+from mcp2mcpb import inspector
 from mcp2mcpb.exceptions import RegistryFetchError
+from mcp2mcpb.models import PackageMeta, PackageSource, ServerType
 
 
 class ArtifactKind(enum.Enum):
@@ -54,3 +59,59 @@ def resolve_artifact(path: Path) -> tuple[Path, ArtifactKind]:
             f"{name} is a PyPI sdist; pass the wheel (*.whl), not the sdist"
         )
     raise RegistryFetchError(f"unrecognised artifact type: {name}")
+
+
+def _read_wheel_metadata(archive: Path) -> Message:
+    """Return the parsed RFC822 METADATA message from a wheel."""
+    with zipfile.ZipFile(archive) as zf:
+        member_name = next(
+            (n for n in zf.namelist() if n.endswith(".dist-info/METADATA")),
+            None,
+        )
+        if member_name is None:
+            raise RegistryFetchError(f"no .dist-info/METADATA in wheel {archive.name}")
+        return message_from_string(
+            zf.read(member_name).decode("utf-8", errors="replace")
+        )
+
+
+def _homepage_and_repo(msg: Message) -> tuple[str | None, str | None]:
+    """Extract homepage + repository URL from Project-URL / Home-page headers."""
+    homepage = msg.get("Home-page") or None
+    repo: str | None = None
+    for raw in msg.get_all("Project-URL") or []:
+        label, _, url = raw.partition(",")
+        key = label.strip().lower()
+        url = url.strip()
+        if key in {"homepage", "home"} and not homepage:
+            homepage = url
+        if key in {"repository", "source", "source code"} and not repo:
+            repo = url
+    return homepage, repo
+
+
+async def _meta_from_wheel(archive: Path, source: PackageSource) -> PackageMeta:
+    """Build PackageMeta from a wheel's METADATA — no network."""
+    msg = _read_wheel_metadata(archive)
+    version = str(msg.get("Version") or source.version or "")
+    pinned = source.model_copy(update={"version": version})
+    entry = await inspector.detect_entry_point(archive, pinned)
+    payload = msg.get_payload()
+    readme = payload if isinstance(payload, str) else ""
+    keywords_raw = str(msg.get("Keywords") or "")
+    keywords = [k.strip() for k in keywords_raw.replace(",", " ").split() if k.strip()]
+    homepage, repo = _homepage_and_repo(msg)
+    return PackageMeta(
+        name=str(msg.get("Name") or source.name),
+        version=version,
+        description=str(msg.get("Summary") or ""),
+        author=str(msg.get("Author") or msg.get("Author-email") or "Unknown"),
+        homepage=homepage,
+        license_id=(msg.get("License-Expression") or msg.get("License") or None),
+        server_type=ServerType.PYTHON,
+        entry=entry,
+        detected_env_vars=inspector.scan_readme_for_env_vars(readme),
+        keywords=keywords,
+        repository_url=repo,
+        requires_python=msg.get("Requires-Python") or None,
+    )
