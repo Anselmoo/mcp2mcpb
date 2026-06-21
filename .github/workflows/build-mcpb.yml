@@ -99,12 +99,12 @@ jobs:
       contents: write    # needed to attach assets to a release
     steps:
       - name: Set up uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
         with:
           version: latest
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
 
@@ -157,6 +157,6 @@ jobs:
 
       - name: Attach to GitHub Release
         if: inputs.attach-to-release && github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ inputs.output-dir }}/*.mcpb
