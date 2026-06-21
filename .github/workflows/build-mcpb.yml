@@ -146,7 +146,9 @@ jobs:
           TRANSPORT: ${{ inputs.transport }}
           NO_PROBE: ${{ inputs.no-probe }}
         run: |
-          mapfile -t ARGS < <(python -m mcp2mcpb._ci_args)
+          ARGS_FILE="$(mktemp)"
+          python -m mcp2mcpb._ci_args > "$ARGS_FILE"   # exits non-zero (with a clear stderr message) if the version can't be resolved
+          mapfile -t ARGS < "$ARGS_FILE"
           python -m mcp2mcpb "${ARGS[@]}"
 
       - name: Attach to GitHub Release
