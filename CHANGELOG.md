@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-21
+### Added
+- `--from-dist PATH` CLI flag: build a `.mcpb` from a locally-built wheel / npm
+  `.tgz` (or a directory containing one) instead of fetching from the registry.
+  `--registry` keeps selecting only the runtime target (uvx/npx); the flag
+  implies `--no-probe` and reads the version from the artifact, so unreleased
+  versions and PR builds work.
+- `from-dist` input on the composite action and `artifact-name` input on the
+  reusable `build-mcpb.yml` workflow, exposing the above to release pipelines.
+
+### Changed
+- The action wrappers now build their `python -m mcp2mcpb` argv via the new,
+  unit-tested `mcp2mcpb._ci_args` module (one shared code path for both
+  wrappers) instead of duplicated YAML bash.
+- Registry-mode version resolution is stricter: it requires an explicit
+  `version` or a `v*` tag ref and fails clearly on a branch ref, instead of
+  silently emitting `--pin <branch-name>`.
+- Default install floors bumped to `mcp2mcpb>=0.5` (action `mcp2mcpb-src`) and
+  `>=0.5` (workflow `mcp2mcpb-version`).
+
 ## [0.4.0] - 2026-06-21
 ### Added
 - `.github/dependabot.yml` (pip + github-actions, weekly) so the SHA-pin
