@@ -20,6 +20,7 @@ import respx
 from typer.testing import CliRunner
 
 from mcp2mcpb.__main__ import _convert, app
+from mcp2mcpb.generator import _short_name
 from mcp2mcpb.models import (
     BundleMode,
     LaunchOverrides,
@@ -102,6 +103,7 @@ CASES: list[Case] = [
         expected_args=[
             "tool",
             "run",
+            "--no-build",
             "--from",
             "mcp-zen-of-languages==1.2.0",
             "zen-mcp",
@@ -118,6 +120,7 @@ CASES: list[Case] = [
         expected_args=[
             "tool",
             "run",
+            "--no-build",
             "--from",
             "repo-release-tools[mcp]==1.9.0",
             "rrt-mcp",
@@ -136,6 +139,7 @@ CASES: list[Case] = [
         expected_args=[
             "tool",
             "run",
+            "--no-build",
             "--from",
             "serena-agent==1.5.3",
             "serena",
@@ -187,7 +191,8 @@ async def test_conversion_roundtrip(case: Case, tmp_path: Path, monkeypatch) -> 
         probe=False,
     )
 
-    filename = mcpb_filename(case.name, case.version, BundleMode.REFERENCE)
+    # The bundle filename follows the manifest name, which drops any npm scope.
+    filename = mcpb_filename(_short_name(case.name), case.version, BundleMode.REFERENCE)
     bundle = tmp_path / filename
     assert bundle.exists(), f"expected {filename} in {list(tmp_path.iterdir())}"
 
@@ -250,6 +255,7 @@ def test_config_file_drives_version_and_recipe(tmp_path: Path, monkeypatch) -> N
     assert manifest["server"]["mcp_config"]["args"] == [
         "tool",
         "run",
+        "--no-build",
         "--from",
         "serena-agent==1.5.3",
         "serena",

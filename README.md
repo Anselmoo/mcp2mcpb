@@ -67,9 +67,18 @@ mcp2mcpb mcp-server-fetch \
     --mode complete \      # -m : complete (vendor deps) | reference (uvx/npx)
     --output dist/         # -o : output directory
 
+# Always pull the newest version at launch (reference mode)
+mcp2mcpb mcp-server-fetch --mode reference --latest
+
 # Print the version
 mcp2mcpb --version
 ```
+
+`--latest` makes the launch command re-resolve the newest published release on
+every start: npm/uvx use `pkg@latest`, and uvx `--from` recipes use
+`--refresh-package`. It conflicts with `--pin`, and trades startup speed for
+freshness (the default cached resolution is faster). Plain `--pin latest` (or
+omitting `--pin`) stays unpinned but lets uvx/npx reuse a cached version.
 
 When auto-detection isn't enough, spell out the launch recipe explicitly and skip
 the `--help` probe:
@@ -153,6 +162,31 @@ jobs:
 On a `release` event the action attaches the produced `.mcpb` files to the GitHub
 release. For platform-specific Python bundles, run it in a matrix across
 `ubuntu-latest`, `macos-13`, `macos-latest`, and `windows-latest`.
+
+#### Pinning the action (security + pre-release testing)
+
+`@v1` is a floating major tag. For supply-chain safety, pin to a full commit SHA
+(immutable; [Dependabot](https://docs.github.com/en/code-security/dependabot)
+still bumps SHA pins):
+
+```yaml
+- uses: Anselmoo/mcp2mcpb@<full-commit-sha>   # immutable pin
+```
+
+To trial an unreleased build **before** it lands on [PyPI](https://pypi.org) — e.g.
+to test a commit across your repos without going productive — pin the action to the
+SHA *and* install the package straight from that commit via `mcp2mcpb-src`:
+
+```yaml
+- uses: Anselmoo/mcp2mcpb@<full-commit-sha>
+  with:
+    package: mcp-server-fetch
+    mode: reference
+    mcp2mcpb-src: "git+https://github.com/Anselmoo/mcp2mcpb.git@<full-commit-sha>"
+```
+
+`mcp2mcpb-src` (default `mcp2mcpb>=0.2`) is what the action `uv pip install`s, so it —
+not the action ref — controls which conversion logic runs.
 
 Or adopt the reusable workflow at the **job** level:
 
@@ -451,6 +485,40 @@ are built four times — `linux-x86_64`, `macos-x86_64`, `macos-arm64`, and
 `windows-x86_64` — and the filename carries the `{os}-{arch}` tag. Node servers
 are platform-independent ([Claude Desktop](https://claude.ai/download) ships its
 own Node.js runtime), so a single `universal`-tagged bundle covers every platform.
+
+---
+
+## Troubleshooting
+
+### `reference` bundle fails to start on Apple Silicon (Intel `uv` shadowing)
+
+**Symptom** — A `reference`-mode bundle shows *“Unable to connect to extension
+server”* in [Claude Desktop](https://claude.ai/download), and the extension log
+shows `uv … x86_64-apple-darwin` trying to **build** a native dependency such as
+[`cryptography`](https://pypi.org/project/cryptography/) / `openssl-sys`, with
+`$HOST = aarch64-apple-darwin` and `$TARGET = x86_64-apple-darwin`.
+
+**Cause** — You have **two** [`uv`](https://docs.astral.sh/uv/) installs: an Intel
+one at `/usr/local/bin/uv` (from Intel [Homebrew](https://brew.sh)) and the native
+arm64 one at `/opt/homebrew/bin/uv`. Claude Desktop resolves `/usr/local/bin`
+first, so it launches the **x86_64** `uv` under Rosetta. When a dependency ships
+**arm64-only** wheels (cryptography 49.x has no macOS x86_64 wheel), that `uv`
+can’t find a matching wheel and falls back to a source build, which cross-compiles
+and crashes in `openssl-sys`. `reference` bundles already pass `--no-build`, so you
+get a clear “no compatible wheel” error rather than a long native-build traceback —
+but the real fix is to use the native `uv`.
+
+**Fix** — Make Claude resolve the arm64 `uv`, then fully restart it:
+
+```bash
+rm -f /usr/local/bin/uv /usr/local/bin/uvx   # or: arch -x86_64 /usr/local/bin/brew uninstall uv
+which -a uv      # should now show only /opt/homebrew/bin/uv
+uv --version     # expect: … aarch64-apple-darwin
+```
+
+Quit Claude Desktop completely (it caches `PATH` at launch), relaunch, then
+re-enable / re-drag the extension. The arm64 `uv` pulls the prebuilt arm64 wheel —
+no compile.
 
 ---
 

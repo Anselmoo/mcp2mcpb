@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-20
+### Added
+- `--latest` flag: the launch command re-resolves the newest published version on every
+  start — npm/uvx use `pkg@latest`; uvx `--from` recipes use `--refresh-package` (since
+  `@latest` is not a valid PEP 508 `--from` spec). Conflicts with `--pin`.
+
+### Changed
+- Reference-mode bundles now invoke `uv tool run --no-build …` so extensions never
+  compile dependencies at launch — a missing/arch-mismatched wheel fails fast with a
+  clear "no compatible wheel" error instead of a native build failure.
+- Scoped npm package names are flattened in the manifest `name`/`display_name` and the
+  bundle filename (`@modelcontextprotocol/server-sequential-thinking` →
+  `server-sequential-thinking`) so Claude Desktop shows a clean, untruncated title.
+
+### Documentation
+- README: troubleshooting note for Apple-Silicon machines where an Intel Homebrew `uv`
+  shadows the arm64 `uv` and triggers cross-compile failures (e.g. `cryptography` /
+  `openssl-sys`).
+
+## [0.2.1] - 2026-06-20
+### Fixed
+- `action.yml` description shortened to meet GitHub Marketplace 125-character limit.
+- `mcp2mcpb-src` default install spec bumped to `mcp2mcpb>=0.2`.
+
 ## [0.2.0] - 2026-06-19
 
 ### Added
