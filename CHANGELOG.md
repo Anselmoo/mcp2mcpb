@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to every GitHub release body (derived from the tagged commit).
 - README badges are now dynamic (live PyPI version, supported Python versions,
   CI status) instead of a hardcoded `v0.2.0` badge.
+- Maturity classifier bumped `3 - Alpha` → `4 - Beta` to reflect the project's
+  stability while staying honestly short of a 1.0/Production claim.
 
 ## [0.3.0] - 2026-06-20
 ### Added
