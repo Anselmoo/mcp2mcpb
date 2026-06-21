@@ -83,6 +83,15 @@ inputs:
     required: false
     default: "false"
 
+  from-dist:
+    description: >
+      Path to a locally-built artifact (wheel / npm '.tgz', or a directory
+      containing one). When set, the bundle is built from it and the registry
+      is NOT contacted for the package; 'registry' still selects the runtime
+      target (uvx/npx). Skips the --help probe. Omit to fetch from the registry.
+    required: false
+    default: ""
+
   attach-to-release:
     description: >
       When 'true' and the workflow was triggered by a 'release' event,
@@ -94,7 +103,7 @@ inputs:
     description: >
       Install source for mcp2mcpb (e.g. package spec or local path).
     required: false
-    default: "mcp2mcpb>=0.2"
+    default: "mcp2mcpb>=0.5"
 
 outputs:
   mcpb-files:
@@ -108,17 +117,15 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Resolve version from tag
+    - name: Resolve version (best-effort, for output only)
       id: resolve-version
       shell: bash
+      env:
+        VERSION_INPUT: ${{ inputs.version }}
       run: |
-        VERSION="${{ inputs.version }}"
-        if [[ -z "$VERSION" && -n "$GITHUB_REF_NAME" ]]; then
+        VERSION="$VERSION_INPUT"
+        if [[ -z "$VERSION" && "$GITHUB_REF_NAME" == v* ]]; then
           VERSION="${GITHUB_REF_NAME#v}"
-        fi
-        if [[ -z "$VERSION" ]]; then
-          echo "Error: could not resolve version. Set the 'version' input explicitly." >&2
-          exit 1
         fi
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
@@ -143,9 +150,10 @@ runs:
         # shell-injection through user-controlled values.
         PACKAGE: ${{ inputs.package }}
         REGISTRY: ${{ inputs.registry }}
-        VERSION: ${{ steps.resolve-version.outputs.version }}
+        VERSION: ${{ inputs.version }}
         MODE: ${{ inputs.mode }}
         OUTPUT_DIR: ${{ inputs.output-dir }}
+        FROM_DIST: ${{ inputs.from-dist }}
         RUNNER: ${{ inputs.runner }}
         ENTRY_SCRIPT: ${{ inputs.entry-script }}
         EXTRAS: ${{ inputs.extras }}
@@ -153,15 +161,7 @@ runs:
         TRANSPORT: ${{ inputs.transport }}
         NO_PROBE: ${{ inputs.no-probe }}
       run: |
-        ARGS=( "$PACKAGE" --registry "$REGISTRY" --pin "$VERSION"
-               --mode "$MODE" --output "$OUTPUT_DIR" )
-        [[ -n "$RUNNER" ]]       && ARGS+=( --runner "$RUNNER" )
-        [[ -n "$ENTRY_SCRIPT" ]] && ARGS+=( --entry-script "$ENTRY_SCRIPT" )
-        for extra in $EXTRAS; do ARGS+=( --extra "$extra" ); done
-        [[ -n "$SUBCOMMAND" ]]   && ARGS+=( --subcommand "$SUBCOMMAND" )
-        [[ -n "$TRANSPORT" ]]    && ARGS+=( --transport "$TRANSPORT" )
-        [[ "$NO_PROBE" == "true" ]] && ARGS+=( --no-probe )
-
+        mapfile -t ARGS < <(python -m mcp2mcpb._ci_args)
         python -m mcp2mcpb "${ARGS[@]}"
 
         # Collect produced file paths for the output
