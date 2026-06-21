@@ -8,6 +8,7 @@ a PR build) can be bundled without contacting PyPI or npm. No network access.
 from __future__ import annotations
 
 import enum
+import tarfile
 import zipfile
 from email import message_from_string
 from email.message import Message
@@ -114,6 +115,21 @@ def _npm_node_engine(pkg: dict[str, object]) -> str | None:
     return None
 
 
+def _read_npm_readme(archive: Path) -> str:
+    """Return the text of the tarball's ``package/README*`` file, or ``''`` if none."""
+    with tarfile.open(archive, "r:gz") as tf:
+        member = next(
+            (m for m in tf.getmembers() if m.name.lower().startswith("package/readme")),
+            None,
+        )
+        if member is None:
+            return ""
+        extracted = tf.extractfile(member)
+        if extracted is None:
+            return ""
+        return extracted.read().decode("utf-8", errors="replace")
+
+
 async def _meta_from_npm(archive: Path, source: PackageSource) -> PackageMeta:
     """Build PackageMeta from a local npm tarball's package.json — no network."""
     pkg = inspector._read_npm_package_json(archive)
@@ -131,9 +147,7 @@ async def _meta_from_npm(archive: Path, source: PackageSource) -> PackageMeta:
         license_id=(str(pkg["license"]) if pkg.get("license") else None),
         server_type=ServerType.NODE,
         entry=entry,
-        detected_env_vars=inspector.scan_readme_for_env_vars(
-            str(pkg.get("readme") or "")
-        ),
+        detected_env_vars=inspector.scan_readme_for_env_vars(_read_npm_readme(archive)),
         keywords=keywords,
         repository_url=_npm_repo_url(pkg),
         node_engine=_npm_node_engine(pkg),

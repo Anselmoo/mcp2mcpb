@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import io
+import json
+import tarfile
 from pathlib import Path
 
 import pytest
@@ -33,6 +36,7 @@ def test_resolve_explicit_wheel(tmp_path: Path) -> None:
 def test_resolve_explicit_npm_tgz(tmp_path: Path) -> None:
     tgz = _write(tmp_path / "pkg-1.0.0.tgz", build_npm_tarball_bytes("pkg", "1.0.0"))
     artifact, kind = resolve_artifact(tgz)
+    assert artifact == tgz
     assert kind is ArtifactKind.NPM
 
 
@@ -129,3 +133,57 @@ async def test_inspect_local_warns_on_pin_mismatch(tmp_path: Path, capsys) -> No
     meta, _ = await inspect_local(whl, source)
     assert meta.version == "2.3.0"  # artifact wins
     assert "1.0.0" in capsys.readouterr().out
+
+
+def _build_npm_tarball_with_readme(
+    name: str,
+    version: str,
+    readme_text: str,
+) -> bytes:
+    """Like ``build_npm_tarball_bytes`` but also adds a ``package/README.md`` member."""
+    unscoped = name.rsplit("/", 1)[-1]
+    package_json = {
+        "name": name,
+        "version": version,
+        "description": f"{name} MCP server.",
+        "bin": {unscoped: "./dist/index.js"},
+        "main": "dist/index.js",
+    }
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w:gz") as tf:
+        pkg_data = json.dumps(package_json).encode("utf-8")
+        pkg_info = tarfile.TarInfo("package/package.json")
+        pkg_info.size = len(pkg_data)
+        tf.addfile(pkg_info, io.BytesIO(pkg_data))
+
+        index = b"console.log('mcp');\n"
+        idx_info = tarfile.TarInfo("package/dist/index.js")
+        idx_info.size = len(index)
+        tf.addfile(idx_info, io.BytesIO(index))
+
+        readme_data = readme_text.encode("utf-8")
+        readme_info = tarfile.TarInfo("package/README.md")
+        readme_info.size = len(readme_data)
+        tf.addfile(readme_info, io.BytesIO(readme_data))
+    return buf.getvalue()
+
+
+async def test_meta_from_npm_reads_readme_env_vars(tmp_path: Path) -> None:
+    """_meta_from_npm must read env vars from the tarball's README, not package.json."""
+    readme = "Set MY_API_KEY to your API key before running the server."
+    tgz = tmp_path / "srv-1.0.0.tgz"
+    tgz.write_bytes(_build_npm_tarball_with_readme("srv", "1.0.0", readme))
+    source = PackageSource(registry=Registry.NPM, name="srv", version="1.0.0")
+    meta = await _meta_from_npm(tgz, source)
+    assert "MY_API_KEY" in meta.detected_env_vars
+
+
+async def test_inspect_local_npm_returns_meta_and_path(tmp_path: Path) -> None:
+    """inspect_local dispatches to the npm branch and returns (meta, archive)."""
+    tgz = tmp_path / "srv-3.0.0.tgz"
+    tgz.write_bytes(build_npm_tarball_bytes("srv", "3.0.0"))
+    source = PackageSource(registry=Registry.NPM, name="srv", version="3.0.0")
+    meta, archive = await inspect_local(tgz, source)
+    assert meta.server_type is ServerType.NODE
+    assert meta.version == "3.0.0"
+    assert archive == tgz
