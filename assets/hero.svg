@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="210" viewBox="0 0 900 210" role="img" aria-label="mcp2mcpb">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0F172A"/>
+      <stop offset="1" stop-color="#1E293B"/>
+    </linearGradient>
+    <linearGradient id="face-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5EEAD4"/>
+      <stop offset="1" stop-color="#2DD4BF"/>
+    </linearGradient>
+    <linearGradient id="face-left" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#14B8A6"/>
+      <stop offset="1" stop-color="#0EA5A4"/>
+    </linearGradient>
+    <linearGradient id="face-right" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0F766E"/>
+      <stop offset="1" stop-color="#0B5E57"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#14B8A6" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#14B8A6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="word" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5EEAD4"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+    <linearGradient id="bundle" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2DD4BF"/>
+      <stop offset="1" stop-color="#14B8A6"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="210" rx="18" fill="url(#bg)"/>
+  <circle cx="95" cy="100" r="70" fill="url(#glow)"/>
+  <!-- emblem -->
+  <g transform="translate(34,38) scale(0.95)">
+    <path d="M64 26 L98 46 L64 66 L30 46 Z" fill="url(#face-top)"/>
+    <path d="M30 46 L64 66 L64 104 L30 84 Z" fill="url(#face-left)"/>
+    <path d="M98 46 L64 66 L64 104 L98 84 Z" fill="url(#face-right)"/>
+    <path d="M64 26 L98 46 L64 66 L30 46 Z" fill="none" stroke="#99F6E4" stroke-width="1.2" stroke-opacity="0.55"/>
+    <line x1="64" y1="66" x2="64" y2="104" stroke="#5EEAD4" stroke-width="1.4" stroke-opacity="0.55"/>
+    <path d="M64 11 l2.6 6.2 6.2 2.6 -6.2 2.6 -2.6 6.2 -2.6 -6.2 -6.2 -2.6 6.2 -2.6 z" fill="#38BDF8"/>
+  </g>
+  <!-- wordmark + tagline -->
+  <text x="175" y="80" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="48" font-weight="600" fill="#F1F5F9">mcp<tspan fill="url(#word)">2</tspan>mcpb</text>
+  <text x="177" y="108" font-family="-apple-system,Segoe UI,Helvetica,sans-serif" font-size="18" fill="#94A3B8">PyPI / npm MCP servers → one-click .mcpb bundles</text>
+  <!-- refined conversion flow -->
+  <g transform="translate(177,128)" font-family="-apple-system,Segoe UI,Helvetica,sans-serif" font-size="14">
+    <rect x="0" y="0" width="118" height="30" rx="8" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+    <text x="14" y="20" fill="#CBD5E1">PyPI · npm</text>
+    <line x1="128" y1="15" x2="170" y2="15" stroke="#38BDF8" stroke-width="2.5" stroke-opacity="0.8"/>
+    <path d="M170 15 l-8 -5 0 10 z" fill="#38BDF8"/>
+    <rect x="182" y="0" width="86" height="30" rx="8" fill="url(#bundle)"/>
+    <text x="225" y="20" text-anchor="middle" fill="#0F172A" font-family="ui-monospace,Menlo,monospace" font-weight="600">.mcpb</text>
+    <line x1="278" y1="15" x2="320" y2="15" stroke="#38BDF8" stroke-width="2.5" stroke-opacity="0.8"/>
+    <path d="M320 15 l-8 -5 0 10 z" fill="#38BDF8"/>
+    <path d="M334 15 l2.6 6.2 6.2 2.6 -6.2 2.6 -2.6 6.2 -2.6 -6.2 -6.2 -2.6 6.2 -2.6 z" fill="#38BDF8"/>
+    <text x="352" y="20" fill="#CBD5E1">Claude Desktop</text>
+  </g>
+</svg>

@@ -1,11 +1,16 @@
 # mcp2mcpb
 
+<p align="center">
+  <img src="assets/hero.svg" alt="mcp2mcpb — PyPI/npm MCP servers to one-click .mcpb bundles" width="640">
+</p>
+
 > Convert [PyPI](https://pypi.org) / [npm](https://www.npmjs.com) MCP servers into
 > one-click `.mcpb` bundles for [Claude Desktop](https://claude.ai/download).
 
-[![Python](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
+[![CI/CD](https://github.com/Anselmoo/mcp2mcpb/actions/workflows/cicd.yml/badge.svg)](https://github.com/Anselmoo/mcp2mcpb/actions/workflows/cicd.yml)
+[![PyPI](https://img.shields.io/pypi/v/mcp2mcpb)](https://pypi.org/project/mcp2mcpb/)
+[![Python](https://img.shields.io/pypi/pyversions/mcp2mcpb)](https://pypi.org/project/mcp2mcpb/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![PyPI](https://img.shields.io/badge/pypi-v0.2.0-informational)](https://pypi.org/project/mcp2mcpb/)
 
 ---
 

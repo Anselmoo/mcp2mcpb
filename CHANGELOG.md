@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- `.github/dependabot.yml` (pip + github-actions, weekly) so the SHA-pin
+  documentation's Dependabot claim is actually practiced by this repo.
+- `.pre-commit-config.yaml` (ruff, ruff-format, ty via `uv run`, plus standard
+  file-hygiene hooks); the CI `lint` job now runs `pre-commit run --all-files`.
+- Governance scaffolding: CONTRIBUTING, SECURITY (private vuln reporting),
+  CODE_OF_CONDUCT (Contributor Covenant 2.1), CODEOWNERS, issue templates
+  (bug/feature + config), and a pull-request template.
+- Project branding with a refined isometric `.mcpb`-bundle emblem on a corporate
+  slate/teal palette (gradients + depth): `assets/logo.svg`, `assets/hero.svg`
+  (README banner), and `assets/social-preview.svg` (GitHub social card, 1280×640).
+
+### Changed
+- The `github-release` CI job now auto-appends an immutable commit-SHA pin block
+  to every GitHub release body (derived from the tagged commit).
+- README badges are now dynamic (live PyPI version, supported Python versions,
+  CI status) instead of a hardcoded `v0.2.0` badge.
+- Maturity classifier bumped `3 - Alpha` → `4 - Beta` to reflect the project's
+  stability while staying honestly short of a 1.0/Production claim.
 
 ## [0.3.0] - 2026-06-20
 ### Added
