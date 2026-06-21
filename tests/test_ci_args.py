@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from mcp2mcpb._ci_args import build_cli_args
+from mcp2mcpb._ci_args import build_cli_args, main
 
 
 def _base(**over: str) -> dict[str, str]:
@@ -101,6 +101,31 @@ def test_empty_optionals_append_nothing() -> None:
         "--no-probe",
     ):
         assert flag not in args
+
+
+def test_main_prints_args_to_stdout(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    env = _base(VERSION="2.0.0")
+    for k, v in env.items():
+        monkeypatch.setenv(k, v)
+    main()
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0] == "demo-pkg"
+    assert "--pin" in lines
+    assert "2.0.0" in lines
+
+
+def test_main_exits_one_on_unresolvable_version(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    env = _base(GITHUB_REF_NAME="main")
+    for k, v in env.items():
+        monkeypatch.setenv(k, v)
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+    assert exc_info.value.code == 1
+    assert "could not resolve a release version" in capsys.readouterr().err
 
 
 def test_module_entrypoint_prints_one_arg_per_line() -> None:

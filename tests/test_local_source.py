@@ -3,6 +3,8 @@ from __future__ import annotations
 import io
 import json
 import tarfile
+import zipfile
+from email import message_from_string
 from pathlib import Path
 
 import pytest
@@ -11,8 +13,14 @@ from factories import build_npm_tarball_bytes, build_wheel_bytes
 from mcp2mcpb.exceptions import RegistryFetchError
 from mcp2mcpb.local_source import (
     ArtifactKind,
+    _homepage_and_repo,
     _meta_from_npm,
     _meta_from_wheel,
+    _npm_author,
+    _npm_node_engine,
+    _npm_repo_url,
+    _read_npm_readme,
+    _read_wheel_metadata,
     inspect_local,
     resolve_artifact,
 )
@@ -187,3 +195,67 @@ async def test_inspect_local_npm_returns_meta_and_path(tmp_path: Path) -> None:
     assert meta.server_type is ServerType.NODE
     assert meta.version == "3.0.0"
     assert archive == tgz
+
+
+def test_directory_picks_npm_tgz_when_no_wheel(tmp_path: Path) -> None:
+    tgz = _write(tmp_path / "pkg-1.0.0.tgz", build_npm_tarball_bytes("pkg", "1.0.0"))
+    artifact, kind = resolve_artifact(tmp_path)
+    assert artifact == tgz
+    assert kind is ArtifactKind.NPM
+
+
+def test_unrecognised_extension_errors(tmp_path: Path) -> None:
+    p = _write(tmp_path / "pkg-1.0.0.zip", b"zip-bytes")
+    with pytest.raises(RegistryFetchError, match="unrecognised artifact type"):
+        resolve_artifact(p)
+
+
+def test_read_wheel_metadata_missing_raises(tmp_path: Path) -> None:
+    whl = tmp_path / "pkg-1.0.0-py3-none-any.whl"
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr("pkg/__init__.py", "")
+    whl.write_bytes(buf.getvalue())
+    with pytest.raises(RegistryFetchError, match="no .dist-info/METADATA"):
+        _read_wheel_metadata(whl)
+
+
+def test_homepage_and_repo_from_project_url() -> None:
+    msg = message_from_string(
+        "Metadata-Version: 2.1\n"
+        "Name: pkg\n"
+        "Project-URL: Repository, https://github.com/example/pkg\n"
+        "Project-URL: Homepage, https://example.com\n"
+    )
+    homepage, repo = _homepage_and_repo(msg)
+    assert homepage == "https://example.com"
+    assert repo == "https://github.com/example/pkg"
+
+
+def test_npm_author_dict_form() -> None:
+    assert _npm_author({"author": {"name": "Alice"}}) == "Alice"
+    assert _npm_author({"author": {}}) == "Unknown"
+
+
+def test_npm_repo_url_dict_form() -> None:
+    assert (
+        _npm_repo_url({"repository": {"url": "https://github.com/x/y"}})
+        == "https://github.com/x/y"
+    )
+    assert _npm_repo_url({"repository": {"type": "git"}}) is None
+
+
+def test_npm_node_engine_dict_form() -> None:
+    assert _npm_node_engine({"engines": {"node": ">=18"}}) == ">=18"
+    assert _npm_node_engine({"engines": {}}) is None
+
+
+def test_read_npm_readme_returns_empty_for_directory_member(tmp_path: Path) -> None:
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w:gz") as tf:
+        info = tarfile.TarInfo("package/README.md")
+        info.type = tarfile.DIRTYPE
+        tf.addfile(info)
+    tgz = tmp_path / "test.tgz"
+    tgz.write_bytes(buf.getvalue())
+    assert _read_npm_readme(tgz) == ""
