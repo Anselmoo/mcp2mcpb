@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   documentation's Dependabot claim is actually practiced by this repo.
 - `.pre-commit-config.yaml` (ruff, ruff-format, ty via `uv run`, plus standard
   file-hygiene hooks); the CI `lint` job now runs `pre-commit run --all-files`.
+- Governance scaffolding: CONTRIBUTING, SECURITY (private vuln reporting),
+  CODE_OF_CONDUCT (Contributor Covenant 2.1), CODEOWNERS, issue templates
+  (bug/feature + config), and a pull-request template.
 
 ### Changed
 - The `github-release` CI job now auto-appends an immutable commit-SHA pin block
