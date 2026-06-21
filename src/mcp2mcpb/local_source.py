@@ -90,6 +90,56 @@ def _homepage_and_repo(msg: Message) -> tuple[str | None, str | None]:
     return homepage, repo
 
 
+def _npm_author(pkg: dict[str, object]) -> str:
+    author = pkg.get("author")
+    if isinstance(author, dict):
+        return str(author.get("name") or "Unknown")
+    return str(author or "Unknown")
+
+
+def _npm_repo_url(pkg: dict[str, object]) -> str | None:
+    repo = pkg.get("repository")
+    if isinstance(repo, dict):
+        url = repo.get("url")
+        return str(url) if url else None
+    return str(repo) if repo else None
+
+
+def _npm_node_engine(pkg: dict[str, object]) -> str | None:
+    engines = pkg.get("engines")
+    if isinstance(engines, dict):
+        node = engines.get("node")
+        if node:
+            return str(node)
+    return None
+
+
+async def _meta_from_npm(archive: Path, source: PackageSource) -> PackageMeta:
+    """Build PackageMeta from a local npm tarball's package.json — no network."""
+    pkg = inspector._read_npm_package_json(archive)
+    version = str(pkg.get("version") or source.version or "")
+    pinned = source.model_copy(update={"version": version})
+    entry = await inspector.detect_entry_point(archive, pinned)
+    keywords_raw = pkg.get("keywords")
+    keywords = [str(k) for k in keywords_raw] if isinstance(keywords_raw, list) else []
+    return PackageMeta(
+        name=str(pkg.get("name") or source.name),
+        version=version,
+        description=str(pkg.get("description") or ""),
+        author=_npm_author(pkg),
+        homepage=(str(pkg["homepage"]) if pkg.get("homepage") else None),
+        license_id=(str(pkg["license"]) if pkg.get("license") else None),
+        server_type=ServerType.NODE,
+        entry=entry,
+        detected_env_vars=inspector.scan_readme_for_env_vars(
+            str(pkg.get("readme") or "")
+        ),
+        keywords=keywords,
+        repository_url=_npm_repo_url(pkg),
+        node_engine=_npm_node_engine(pkg),
+    )
+
+
 async def _meta_from_wheel(archive: Path, source: PackageSource) -> PackageMeta:
     """Build PackageMeta from a wheel's METADATA — no network."""
     msg = _read_wheel_metadata(archive)

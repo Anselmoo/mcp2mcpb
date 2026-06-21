@@ -6,7 +6,12 @@ import pytest
 from factories import build_npm_tarball_bytes, build_wheel_bytes
 
 from mcp2mcpb.exceptions import RegistryFetchError
-from mcp2mcpb.local_source import ArtifactKind, _meta_from_wheel, resolve_artifact
+from mcp2mcpb.local_source import (
+    ArtifactKind,
+    _meta_from_npm,
+    _meta_from_wheel,
+    resolve_artifact,
+)
 from mcp2mcpb.models import PackageSource, Registry, ServerType
 
 
@@ -61,6 +66,17 @@ def test_multiple_wheels_error(tmp_path: Path) -> None:
 def test_missing_path_errors(tmp_path: Path) -> None:
     with pytest.raises(RegistryFetchError, match="not found"):
         resolve_artifact(tmp_path / "nope")
+
+
+async def test_meta_from_npm_reads_package_json(tmp_path: Path) -> None:
+    tgz = tmp_path / "srv-9.9.9.tgz"
+    tgz.write_bytes(build_npm_tarball_bytes("srv", "9.9.9"))
+    source = PackageSource(registry=Registry.NPM, name="srv", version="9.9.9")
+    meta = await _meta_from_npm(tgz, source)
+    assert meta.name == "srv"
+    assert meta.version == "9.9.9"
+    assert meta.server_type is ServerType.NODE
+    assert meta.entry.command
 
 
 async def test_meta_from_wheel_reads_metadata(tmp_path: Path) -> None:
