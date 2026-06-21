@@ -1,5 +1,9 @@
 # mcp2mcpb
 
+<p align="center">
+  <img src="assets/hero.svg" alt="mcp2mcpb — PyPI/npm MCP servers to one-click .mcpb bundles" width="640">
+</p>
+
 > Convert [PyPI](https://pypi.org) / [npm](https://www.npmjs.com) MCP servers into
 > one-click `.mcpb` bundles for [Claude Desktop](https://claude.ai/download).
 

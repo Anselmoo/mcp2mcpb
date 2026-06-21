@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="180" viewBox="0 0 880 180" role="img" aria-label="mcp2mcpb">
+  <rect width="880" height="180" rx="16" fill="#0d1117"/>
+  <g transform="translate(40,42)">
+    <rect width="96" height="96" rx="18" fill="#1f6feb"/>
+    <path d="M30 33 L48 24 L66 33 L66 63 L48 72 L30 63 Z" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M30 33 L48 42 L66 33" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
+    <line x1="48" y1="42" x2="48" y2="72" stroke="#fff" stroke-width="4"/>
+  </g>
+  <text x="170" y="86" font-family="ui-monospace,Menlo,monospace" font-size="44" fill="#e6edf3">mcp2mcpb</text>
+  <text x="172" y="120" font-family="-apple-system,Segoe UI,sans-serif" font-size="20" fill="#9fb3c8">PyPI / npm MCP servers → one-click .mcpb bundles</text>
+</svg>

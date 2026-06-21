@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="mcp2mcpb social preview">
+  <rect width="1280" height="640" fill="#0d1117"/>
+  <rect x="0" y="0" width="1280" height="8" fill="#1f6feb"/>
+  <g transform="translate(120,210)">
+    <rect width="200" height="200" rx="36" fill="#1f6feb"/>
+    <path d="M62 70 L100 50 L138 70 L138 130 L100 150 L62 130 Z" fill="none" stroke="#fff" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M62 70 L100 90 L138 70" fill="none" stroke="#fff" stroke-width="8" stroke-linejoin="round"/>
+    <line x1="100" y1="90" x2="100" y2="150" stroke="#fff" stroke-width="8"/>
+  </g>
+  <text x="380" y="300" font-family="ui-monospace,Menlo,monospace" font-size="96" fill="#e6edf3">mcp2mcpb</text>
+  <text x="384" y="372" font-family="-apple-system,Segoe UI,sans-serif" font-size="40" fill="#9fb3c8">PyPI / npm MCP servers → one-click .mcpb bundles</text>
+  <text x="384" y="430" font-family="-apple-system,Segoe UI,sans-serif" font-size="28" fill="#6e7d8f">for Claude Desktop · Python 3.12+ · MIT</text>
+</svg>
