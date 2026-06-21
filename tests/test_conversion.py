@@ -261,3 +261,34 @@ def test_config_file_drives_version_and_recipe(tmp_path: Path, monkeypatch) -> N
         "serena",
         "start-mcp-server",
     ]
+
+
+@respx.mock(assert_all_mocked=True)
+def test_cli_from_dist_makes_no_http_call(tmp_path: Path) -> None:
+    whl = tmp_path / "demo-pkg-2.3.0-py3-none-any.whl"
+    whl.write_bytes(
+        factories.build_wheel_bytes(
+            "demo-pkg", "2.3.0", console_scripts={"demo-pkg": "demo_pkg.__main__:main"}
+        )
+    )
+    out = tmp_path / "out"
+    result = CliRunner().invoke(
+        app,
+        [
+            "convert",
+            "demo-pkg",
+            "--registry",
+            "pypi",
+            "--from-dist",
+            str(whl),
+            "--mode",
+            "reference",
+            "--output",
+            str(out),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    bundles = list(out.glob("*.mcpb"))
+    assert len(bundles) == 1
+    # respx with assert_all_mocked raises if any unmocked HTTP request is made;
+    # no routes are registered, so any PyPI/npm call would fail the test.
