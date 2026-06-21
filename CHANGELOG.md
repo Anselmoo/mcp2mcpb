@@ -14,9 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Governance scaffolding: CONTRIBUTING, SECURITY (private vuln reporting),
   CODE_OF_CONDUCT (Contributor Covenant 2.1), CODEOWNERS, issue templates
   (bug/feature + config), and a pull-request template.
-- Project branding depicting the PyPI/npm → `.mcpb` → Claude Desktop conversion
-  flow (registry brand colors): `assets/logo.svg`, `assets/hero.svg` (README
-  banner), and `assets/social-preview.svg` (GitHub social card, 1280×640).
+- Project branding with a refined isometric `.mcpb`-bundle emblem on a corporate
+  slate/teal palette (gradients + depth): `assets/logo.svg`, `assets/hero.svg`
+  (README banner), and `assets/social-preview.svg` (GitHub social card, 1280×640).
 
 ### Changed
 - The `github-release` CI job now auto-appends an immutable commit-SHA pin block
