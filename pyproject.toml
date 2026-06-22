@@ -32,6 +32,8 @@ dev = [
     "ty>=0.0.26",
     "poethepoet>=0.27",
     "repo-release-tools>=1.9.0",
+    "cairosvg>=2.9.0",
+    "pillow>=10.0",
 ]
 
 [project.scripts]
@@ -72,6 +74,21 @@ sequence = ["lint", "format-check", "type-check", "test"]
 [tool.poe.tasks.dist]
 help = "Run the full gate then build distributions into dist/"
 sequence = ["check", "build"]
+
+[tool.poe.tasks.svg-to-png]
+help = "Render all assets/*.svg to PNG via cairosvg (Homebrew cairo on macOS)"
+cmd = "python scripts/build_assets.py svg-to-png"
+
+[tool.poe.tasks.svg-to-png.env]
+DYLD_LIBRARY_PATH = "/opt/homebrew/opt/cairo/lib"
+
+[tool.poe.tasks.favicon]
+help = "Build favicon.ico + PNG size variants from assets/logo.png via Pillow"
+cmd = "python scripts/build_assets.py favicon"
+
+[tool.poe.tasks.build-assets]
+help = "Convert all SVGs to PNG then generate favicons (svg-to-png → favicon)"
+sequence = ["svg-to-png", "favicon"]
 
 # ── repo-release-tools (version bump + changelog + release policy) ──────────────
 [tool.rrt]
