@@ -54,6 +54,14 @@ config) → `prober` (`--help` probe) → `launch` (resolve recipe) → `generat
 - `repo-release-tools` (`[tool.rrt]`) bumps versions; keep `pyproject.toml` and
   `src/mcp2mcpb/__init__.py` in lock-step.
 
+## GitHub Operations
+
+- **Prefer the GitHub MCP tools** (`mcp__github__*`) over the `gh` CLI for creating
+  issues and pull requests — MCP uses native OAuth and avoids auth timeouts that
+  affect the CLI in this environment.
+- **Always ask for confirmation before creating issues or PRs**, even in auto/autonomous
+  mode. Show the title + body and wait for explicit approval.
+
 ## Gotchas
 
 - **Tests are fully offline** (`tests/conftest.py`): HTTP via `respx`,
