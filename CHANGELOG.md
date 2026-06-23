@@ -7,29 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- `scripts/build_assets.py` pipeline: cairosvg SVG→PNG for logo/hero/social-preview,
-  Pillow favicon.ico + PNG size variants; exposed via `poe svg-to-png`, `poe favicon`,
-  `poe build-assets` tasks.
-- Version badge (top-right pill) in `assets/hero.svg` kept in sync with `rrt bump`.
-- `repo-release-tools` integration for SVG version badges: two `version_targets` regex
-  patterns update `hero.svg` and `social-preview.svg` alongside `pyproject.toml` and
-  `__init__.py` on every `rrt bump`.
-- `generated_assets` hook runs `poe build-assets` automatically after each bump so PNG
-  badges always reflect the new version.
-- `artifact_targets` fingerprinting for all five generated outputs (logo.png, hero.png,
-  social-preview.png, favicon.ico, apple-touch-icon.png) tracked in `.rrt/artifacts.lock.toml`.
-
-### Fixed
-- `cairosvg.svg2png()` return value is now explicitly captured and written with
-  `dst.write_bytes()` — the previous `write_to=str(dst)` was unreliable across versions.
-- `social-preview.png` wordmark centering: replaced `text-anchor="middle"` + `<tspan>`
-  (broken in cairosvg/Pango which picks one font per run) with overlaid text elements
-  at measured Menlo positions.
-- `social-preview.png` and `hero.png` tagline `→` glyph: Lucida Grande (always present
-  on macOS; confirmed via fontconfig) now leads the `font-family` fallback chain so
-  cairosvg renders U+2192 instead of the `.notdef` box.
-
 ## [0.5.0] - 2026-06-21
 ### Added
 - `--from-dist PATH` CLI flag: build a `.mcpb` from a locally-built wheel / npm
