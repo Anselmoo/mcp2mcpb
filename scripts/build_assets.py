@@ -25,6 +25,7 @@ def _project_version() -> str:
     with open(ROOT / "pyproject.toml", "rb") as f:
         return tomllib.load(f)["project"]["version"]
 
+
 # (source, dest, output_width, output_height) — None keeps natural SVG size
 SVG_OUTPUTS: list[tuple[str, str, int | None, int | None]] = [
     ("logo.svg", "logo.png", 512, 512),
@@ -45,9 +46,7 @@ def svg_to_png() -> None:
         dst = ASSETS / png_name
         svg_data = src.read_bytes()
         if svg_name in ("social-preview.svg", "hero.svg"):
-            svg_data = re.sub(
-                rb"v\d+\.\d+\.\d+", f"v{version}".encode(), svg_data
-            )
+            svg_data = re.sub(rb"v\d+\.\d+\.\d+", f"v{version}".encode(), svg_data)
         kwargs: dict[str, object] = {"bytestring": svg_data}
         if w and h:
             kwargs["output_width"] = w
