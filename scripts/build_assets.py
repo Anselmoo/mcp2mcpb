@@ -53,6 +53,8 @@ def svg_to_png() -> None:
             kwargs["output_width"] = w
             kwargs["output_height"] = h
         png_bytes = cairosvg.svg2png(**kwargs)
+        if png_bytes is None:
+            raise RuntimeError(f"cairosvg.svg2png returned None for {svg_name}")
         dst.write_bytes(png_bytes)
         print(f"  {svg_name} → {png_name}")
     print("✓ SVG → PNG")
