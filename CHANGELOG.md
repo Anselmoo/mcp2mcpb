@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-06-23
 ### Added
 - `scripts/build_assets.py` pipeline: cairosvg SVG→PNG for logo/hero/social-preview,
   Pillow favicon.ico + PNG size variants; exposed via `poe svg-to-png`, `poe favicon`,
