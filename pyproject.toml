@@ -127,7 +127,7 @@ ignore = [
 # ── ty (Astral type checker) ──────────────────────────────────────────────────
 [tool.ty.environment]
 python-version = "3.12"
-extra-paths = ["src"]
+extra-paths = ["src", "scripts"]
 
 [tool.ty.src]
 include = ["src", "tests"]

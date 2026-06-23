@@ -11,11 +11,19 @@ Requires: cairosvg, Pillow (both in dev extras).
 from __future__ import annotations
 
 import argparse
+import re
+import tomllib
 from pathlib import Path
 
 from PIL import Image
 
 ASSETS = Path(__file__).parent.parent / "assets"
+ROOT = Path(__file__).parent.parent
+
+
+def _project_version() -> str:
+    with open(ROOT / "pyproject.toml", "rb") as f:
+        return tomllib.load(f)["project"]["version"]
 
 # (source, dest, output_width, output_height) — None keeps natural SVG size
 SVG_OUTPUTS: list[tuple[str, str, int | None, int | None]] = [
@@ -31,15 +39,21 @@ RESAMPLE = Image.Resampling.LANCZOS
 def svg_to_png() -> None:
     import cairosvg  # noqa: PLC0415  # lazy: needs DYLD_LIBRARY_PATH set before import
 
+    version = _project_version()
     for svg_name, png_name, w, h in SVG_OUTPUTS:
         src = ASSETS / svg_name
         dst = ASSETS / png_name
-        if w and h:
-            cairosvg.svg2png(
-                url=str(src), write_to=str(dst), output_width=w, output_height=h
+        svg_data = src.read_bytes()
+        if svg_name in ("social-preview.svg", "hero.svg"):
+            svg_data = re.sub(
+                rb"v\d+\.\d+\.\d+", f"v{version}".encode(), svg_data
             )
-        else:
-            cairosvg.svg2png(url=str(src), write_to=str(dst))
+        kwargs: dict[str, object] = {"bytestring": svg_data}
+        if w and h:
+            kwargs["output_width"] = w
+            kwargs["output_height"] = h
+        png_bytes = cairosvg.svg2png(**kwargs)
+        dst.write_bytes(png_bytes)
         print(f"  {svg_name} → {png_name}")
     print("✓ SVG → PNG")
 
