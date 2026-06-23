@@ -103,6 +103,14 @@ kind = "pep621"
 path = "src/mcp2mcpb/__init__.py"
 kind = "python_version"
 
+[[tool.rrt.version_targets]]
+path = "assets/social-preview.svg"
+pattern = '(fill="#F0FDFA">v)(\d+\.\d+\.\d+)(</text>)'
+
+[[tool.rrt.version_targets]]
+path = "assets/hero.svg"
+pattern = '(fill="#F0FDFA">v)(\d+\.\d+\.\d+)(</text>)'
+
 [tool.rrt.eol]
 languages = ["python"]
 warn_days = 180
