@@ -32,6 +32,8 @@ dev = [
     "ty>=0.0.26",
     "poethepoet>=0.27",
     "repo-release-tools>=1.9.0",
+    "cairosvg>=2.9.0",
+    "pillow>=10.0",
 ]
 
 [project.scripts]
@@ -73,6 +75,21 @@ sequence = ["lint", "format-check", "type-check", "test"]
 help = "Run the full gate then build distributions into dist/"
 sequence = ["check", "build"]
 
+[tool.poe.tasks.svg-to-png]
+help = "Render all assets/*.svg to PNG via cairosvg (Homebrew cairo on macOS)"
+cmd = "python scripts/build_assets.py svg-to-png"
+
+[tool.poe.tasks.svg-to-png.env]
+DYLD_LIBRARY_PATH = "/opt/homebrew/opt/cairo/lib"
+
+[tool.poe.tasks.favicon]
+help = "Build favicon.ico + PNG size variants from assets/logo.png via Pillow"
+cmd = "python scripts/build_assets.py favicon"
+
+[tool.poe.tasks.build-assets]
+help = "Convert all SVGs to PNG then generate favicons (svg-to-png → favicon)"
+sequence = ["svg-to-png", "favicon"]
+
 # ── repo-release-tools (version bump + changelog + release policy) ──────────────
 [tool.rrt]
 pin_target_missing = "warn"
@@ -85,6 +102,40 @@ kind = "pep621"
 [[tool.rrt.version_targets]]
 path = "src/mcp2mcpb/__init__.py"
 kind = "python_version"
+
+[[tool.rrt.version_targets]]
+path = "assets/social-preview.svg"
+pattern = '(fill="#F0FDFA">v)(\d+\.\d+\.\d+)(</text>)'
+
+[[tool.rrt.version_targets]]
+path = "assets/hero.svg"
+pattern = '(fill="#F0FDFA">v)(\d+\.\d+\.\d+)(</text>)'
+
+# Rebuild PNGs after every version bump so the badge reflects the new version.
+[[tool.rrt.generated_assets]]
+path = "assets/social-preview.png"
+command = ["uv", "run", "poe", "build-assets"]
+
+# Fingerprint generated PNG/ICO outputs so drift is detectable.
+[[tool.rrt.artifact_targets]]
+path = "assets/logo.png"
+description = "Logo PNG rasterised from logo.svg (512×512)"
+
+[[tool.rrt.artifact_targets]]
+path = "assets/hero.png"
+description = "Hero banner PNG rasterised from hero.svg"
+
+[[tool.rrt.artifact_targets]]
+path = "assets/social-preview.png"
+description = "Social preview PNG rasterised from social-preview.svg"
+
+[[tool.rrt.artifact_targets]]
+path = "assets/favicon.ico"
+description = "Multi-size favicon ICO"
+
+[[tool.rrt.artifact_targets]]
+path = "assets/apple-touch-icon.png"
+description = "Apple touch icon (180×180)"
 
 [tool.rrt.eol]
 languages = ["python"]
@@ -110,7 +161,7 @@ ignore = [
 # ── ty (Astral type checker) ──────────────────────────────────────────────────
 [tool.ty.environment]
 python-version = "3.12"
-extra-paths = ["src"]
+extra-paths = ["src", "scripts"]
 
 [tool.ty.src]
 include = ["src", "tests"]
