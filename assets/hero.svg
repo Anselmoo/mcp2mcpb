@@ -42,7 +42,7 @@
   </g>
   <!-- wordmark + tagline -->
   <text x="175" y="80" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="48" font-weight="600" fill="#F1F5F9">mcp<tspan fill="#38BDF8">2</tspan>mcpb</text>
-  <text x="177" y="108" font-family="Helvetica Neue,Helvetica,Geneva,Arial,Noto Sans,sans-serif" font-size="18" fill="#94A3B8">PyPI / npm MCP servers → one-click .mcpb bundles</text>
+  <text x="177" y="108" font-family="Lucida Grande,Helvetica Neue,Helvetica,Geneva,Arial,sans-serif" font-size="18" fill="#94A3B8">PyPI / npm MCP servers → one-click .mcpb bundles</text>
   <!-- refined conversion flow -->
   <g transform="translate(177,128)" font-family="Helvetica Neue,Helvetica,Geneva,Arial,sans-serif" font-size="14">
     <rect x="0" y="0" width="118" height="30" rx="8" fill="#1E293B" stroke="#334155" stroke-width="1"/>
