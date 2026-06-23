@@ -111,6 +111,32 @@ pattern = '(fill="#F0FDFA">v)(\d+\.\d+\.\d+)(</text>)'
 path = "assets/hero.svg"
 pattern = '(fill="#F0FDFA">v)(\d+\.\d+\.\d+)(</text>)'
 
+# Rebuild PNGs after every version bump so the badge reflects the new version.
+[[tool.rrt.generated_assets]]
+path = "assets/social-preview.png"
+command = ["uv", "run", "poe", "build-assets"]
+
+# Fingerprint generated PNG/ICO outputs so drift is detectable.
+[[tool.rrt.artifact_targets]]
+path = "assets/logo.png"
+description = "Logo PNG rasterised from logo.svg (512×512)"
+
+[[tool.rrt.artifact_targets]]
+path = "assets/hero.png"
+description = "Hero banner PNG rasterised from hero.svg"
+
+[[tool.rrt.artifact_targets]]
+path = "assets/social-preview.png"
+description = "Social preview PNG rasterised from social-preview.svg"
+
+[[tool.rrt.artifact_targets]]
+path = "assets/favicon.ico"
+description = "Multi-size favicon ICO"
+
+[[tool.rrt.artifact_targets]]
+path = "assets/apple-touch-icon.png"
+description = "Apple touch icon (180×180)"
+
 [tool.rrt.eol]
 languages = ["python"]
 warn_days = 180

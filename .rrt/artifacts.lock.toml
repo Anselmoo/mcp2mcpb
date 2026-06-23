@@ -1,0 +1,33 @@
+[meta]
+generated_at = "2026-06-23T05:34:10+00:00"
+rrt_version = "1.9.0"
+
+[files."assets/logo.png"]
+hash = "sha256:530060e892416ed9fd97272a7c7a1fdc64f8cabad223d7d5f40af16111bfc450"
+size = 56411
+description = "Logo PNG rasterised from logo.svg (512×512)"
+updated_at = "2026-06-23T05:34:10+00:00"
+
+[files."assets/hero.png"]
+hash = "sha256:aabd01a5bf2e6316e5794696948ac8ee516f173f4cd1a8f5da4d83d690e58ecf"
+size = 40246
+description = "Hero banner PNG rasterised from hero.svg"
+updated_at = "2026-06-23T05:34:10+00:00"
+
+[files."assets/social-preview.png"]
+hash = "sha256:c7416e324884643fcfa6ba96719bf1896bba8a164666188fac563324e9489e21"
+size = 97222
+description = "Social preview PNG rasterised from social-preview.svg"
+updated_at = "2026-06-23T05:34:10+00:00"
+
+[files."assets/favicon.ico"]
+hash = "sha256:b874485df064d33fa6b6e1d4d536c8822a7cfe7a8ccc78b4c008316b39a56c6c"
+size = 10744
+description = "Multi-size favicon ICO"
+updated_at = "2026-06-23T05:34:10+00:00"
+
+[files."assets/apple-touch-icon.png"]
+hash = "sha256:7ae7a86d69c108b7ece1e6fc88dff58b32befc8307285e89a9da680f38804b26"
+size = 17747
+description = "Apple touch icon (180×180)"
+updated_at = "2026-06-23T05:34:10+00:00"
