@@ -41,10 +41,10 @@
     <path d="M64 11 l2.6 6.2 6.2 2.6 -6.2 2.6 -2.6 6.2 -2.6 -6.2 -6.2 -2.6 6.2 -2.6 z" fill="#38BDF8"/>
   </g>
   <!-- wordmark + tagline -->
-  <text x="175" y="80" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="48" font-weight="600" fill="#F1F5F9">mcp<tspan fill="url(#word)">2</tspan>mcpb</text>
-  <text x="177" y="108" font-family="-apple-system,Segoe UI,Helvetica,sans-serif" font-size="18" fill="#94A3B8">PyPI / npm MCP servers → one-click .mcpb bundles</text>
+  <text x="175" y="80" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="48" font-weight="600" fill="#F1F5F9">mcp<tspan fill="#38BDF8">2</tspan>mcpb</text>
+  <text x="177" y="108" font-family="Lucida Grande,Helvetica Neue,Helvetica,Geneva,Arial,sans-serif" font-size="18" fill="#94A3B8">PyPI / npm MCP servers → one-click .mcpb bundles</text>
   <!-- refined conversion flow -->
-  <g transform="translate(177,128)" font-family="-apple-system,Segoe UI,Helvetica,sans-serif" font-size="14">
+  <g transform="translate(177,128)" font-family="Helvetica Neue,Helvetica,Geneva,Arial,sans-serif" font-size="14">
     <rect x="0" y="0" width="118" height="30" rx="8" fill="#1E293B" stroke="#334155" stroke-width="1"/>
     <text x="14" y="20" fill="#CBD5E1">PyPI · npm</text>
     <line x1="128" y1="15" x2="170" y2="15" stroke="#38BDF8" stroke-width="2.5" stroke-opacity="0.8"/>
@@ -55,5 +55,10 @@
     <path d="M320 15 l-8 -5 0 10 z" fill="#38BDF8"/>
     <path d="M334 15 l2.6 6.2 6.2 2.6 -6.2 2.6 -2.6 6.2 -2.6 -6.2 -6.2 -2.6 6.2 -2.6 z" fill="#38BDF8"/>
     <text x="352" y="20" fill="#CBD5E1">Claude Desktop</text>
+  </g>
+  <!-- version badge (top-right) -->
+  <g transform="translate(770,14)">
+    <rect x="0" y="0" width="116" height="24" rx="12" fill="#0F766E" fill-opacity="0.9"/>
+    <text x="58" y="17" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12" font-weight="600" fill="#F0FDFA">v0.5.0</text>
   </g>
 </svg>
