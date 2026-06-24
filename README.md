@@ -1,7 +1,7 @@
 # mcp2mcpb
 
 <p align="center">
-  <img src="assets/hero.svg" alt="mcp2mcpb — PyPI/npm MCP servers to one-click .mcpb bundles" width="640">
+  <img src="https://github.com/Anselmoo/mcp2mcpb/blob/main/assets/hero.svg?raw=true" alt="mcp2mcpb — PyPI/npm MCP servers to one-click .mcpb bundles" width="640">
 </p>
 
 > Convert [PyPI](https://pypi.org) / [npm](https://www.npmjs.com) MCP servers into
@@ -23,7 +23,7 @@ required. The file format powering that experience is `.mcpb`.
 
 | Extensions panel | Install options |
 |:---:|:---:|
-| ![Claude Desktop Extensions panel — installed extensions and drag-to-install hint](assets/claude-desktop-extensions.png) | ![Claude Desktop Extension Settings — Install Extension and Install Unpacked Extension buttons](assets/claude-desktop-install.png) |
+| ![Claude Desktop Extensions panel — installed extensions and drag-to-install hint](https://github.com/Anselmoo/mcp2mcpb/blob/main/assets/claude-desktop-extensions.png?raw=true) | ![Claude Desktop Extension Settings — Install Extension and Install Unpacked Extension buttons](https://github.com/Anselmoo/mcp2mcpb/blob/main/assets/claude-desktop-install.png?raw=true) |
 
 A `.mcpb` file is a ZIP archive containing the server's files together with a
 `manifest.json`. Drop it onto the Extensions panel (or click **Install Extension**)
