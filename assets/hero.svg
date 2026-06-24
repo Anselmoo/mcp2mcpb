@@ -59,6 +59,6 @@
   <!-- version badge (top-right) -->
   <g transform="translate(770,14)">
     <rect x="0" y="0" width="116" height="24" rx="12" fill="#0F766E" fill-opacity="0.9"/>
-    <text x="58" y="17" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12" font-weight="600" fill="#F0FDFA">v0.5.0</text>
+    <text x="58" y="17" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12" font-weight="600" fill="#F0FDFA">v1.0.0</text>
   </g>
 </svg>
